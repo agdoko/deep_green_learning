@@ -6,3 +6,4 @@ folium
 requests
 io
 numpy
+sklearn
