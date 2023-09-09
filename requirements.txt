@@ -5,4 +5,4 @@ ee
 folium
 requests
 numpy
-sklearn
+scikit-learn
