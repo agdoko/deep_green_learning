@@ -6,3 +6,4 @@ folium
 requests
 numpy
 scikit-learn
+gcloud
