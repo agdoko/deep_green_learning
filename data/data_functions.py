@@ -2,24 +2,10 @@
 import ee
 from typing import Iterable
 
-""" # Authentication test
-ee.Initialize()
-print(ee.Image("NASA/NASADEM_HGT/001").get("title").getInfo())
- """
-
-# Initialise the Earth Engine module.
-ee.Initialize()
-
-# Defining the main year around which data will be collected
-f_date = '2017'
-
-# Defining the target ImageCollection, filtered by the main year
-target = (ee.ImageCollection("MODIS/061/MCD12Q1")
-          .filterDate(f_date)
-          .sort('system:time_start'))  # Sort by time to get earliest image
+""" Defines the functions used to get the data for initial model training. """
 
 # Definining the target image collection
-def get_target_image() -> ee.Image:
+def get_target_image(target) -> ee.Image:
     """ Buckets land cover classifications into 2 classes:
     1 = forest
     0 = non-forest """
@@ -49,19 +35,14 @@ def sample_points(
     for point in points.toList(points.size()).getInfo():
         yield point["geometry"]["coordinates"]
 
-# Oversimplified North America region.
-#polygon = [[[-145.7, 63.2], [-118.1, 22.3], [-78.2, 5.6], [-52.9, 47.6]]]
-
-# Global polygon, while minimising the amount of water
-polygon = [[[-180, -60], [180, -60], [180, 85], [-180, 85], [-180, -60]]]
-
-def get_coordinates(polygon):
+# Getting the coordinates for the target points
+def get_coordinates(polygon, target):
     """ Returns a dictionary of coordinates for the target points. """
     # Defining the region of interest
     region = ee.Geometry.Polygon(polygon)
 
     # Getting the target image and creating a dictionary to store the coordinates
-    labels_image = get_target_image()
+    labels_image = get_target_image(target)
     target_dict = {}
     numb = 1
 
@@ -70,11 +51,7 @@ def get_coordinates(polygon):
         target_dict[f"P{numb}"] = point
         numb +=1
 
-    # Printing the target dictionary at end to check script ran successfully
-    print(target_dict)
+    return target_dict
 
+# Taking the coordinates and getting the features data for the target points
 
-
-
-# Running the function get_coordinates to test the script
-get_coordinates(polygon)
