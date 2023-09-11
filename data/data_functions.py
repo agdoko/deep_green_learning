@@ -131,7 +131,7 @@ def get_data(target_dict, year, feature_bands, target):
 
         # Append the numpy array to the list
         stacked_feature_list.append(NDVI)
-        #print(stacked_feature_list[-1]) # Uncomment to see the numpy array
+        print(stacked_feature_list[-1]) # Uncomment to see the numpy array
         print(f"Appending feature {features_counter} with shape {NDVI.shape}") # Uncomment to see the shape of the numpy array
         features_counter += 1
 
@@ -176,7 +176,7 @@ def get_data(target_dict, year, feature_bands, target):
 
         # Append the numpy array to the list
         stacked_target_list.append(image_array_targets)
-        #print(stacked_target_list[-1]) # Uncomment to see the numpy array
+        print(stacked_target_list[-1]) # Uncomment to see the numpy array
         print(f"Appending target {target_counter} with shape {image_array_targets.shape}") # Uncomment to see the shape of the numpy array
         target_counter += 1
 
