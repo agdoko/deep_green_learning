@@ -32,6 +32,7 @@ def baseline(test_feature):
     mask_ndvi = NDVI >= 0.6
     NDVI_bucketed = np.where(mask_ndvi, 1, 0)
     NDVI_pooled = majority_pool(NDVI_bucketed)
+    pass
 
 # Define and train the CNN model
 def train_cnn():
