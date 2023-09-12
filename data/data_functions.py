@@ -203,5 +203,5 @@ def get_data(target_dict, year, feature_bands, target):
 
     train_feature = feature_stacked_array[:split_index]
     test_feature = feature_stacked_array[split_index:]
-
+    print(train_feature.shape, train_target.shape, test_feature.shape, test_target.shape)
     return train_feature, train_target, test_feature, test_target
