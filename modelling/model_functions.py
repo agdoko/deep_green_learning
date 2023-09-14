@@ -3,6 +3,7 @@ import numpy as np
 import tensorflow as tf
 from sklearn.metrics import f1_score
 
+
 # Defining the majority pooling function for the baseline model
 def majority_pool(array):
     dt = np.dtype([("ndvi", np.int32)])
@@ -29,15 +30,52 @@ def baseline(test_feature):
     y_pred_baseline = majority_pool(NDVI_bucketed)
     return y_pred_baseline
 
+#Convert a structured ndarray to a standard ndarray and expand dimensions to align with CNN input.
+def process_and_expand(structured_array, field_name, dtype=np.float32):
+    """
+    Parameters:
+        structured_array (numpy.ndarray): The structured array to convert.
+        field_name (str): The name of the field to extract from the structured array.
+        dtype (numpy.dtype, optional): The desired dtype for the output array. Defaults to np.float32.
+
+    Returns:
+        numpy.ndarray: The converted and expanded standard ndarray.
+    """
+    standard_array = np.array(structured_array[field_name], dtype=dtype)
+    expanded_array = np.expand_dims(standard_array, axis=-1)
+    return expanded_array
+
+
 # Define and train the CNN model
-def train_cnn():
-    # TO DO - Ana / Shayan your code here
-    pass
+def train_cnn(expanded_array):
+    model = Sequential()
+    model.add(Conv2D(32, (3, 3), activation='relu', input_shape=(50, 50, 1)))
+    model.add(MaxPooling2D((2, 2)))
+    model.add(Conv2D(64, (3, 3), activation='relu'))
+    model.add(MaxPooling2D((2, 2)))
+    model.add(Flatten())
+    model.add(Dense(64, activation='relu'))
+    model.add(Dense(1, activation='sigmoid'))  # Binary classification
+
+    model.compile(optimizer='adam',
+                  loss='binary_crossentropy',
+                  metrics=['accuracy'])
+
+    model.fit(train_feature_expanded, train_target_expanded, epochs=10, batch_size=32, validation_split=0.2)
+
+    return model
+
+trained_model = train_cnn(train_feature_reshaped, train_target_reshaped)
 
 # Run a prediction from the CNN model
-def predict_cnn():
-    # TO DO - Ana / Shayan your code here
-    pass
+def predict_cnn(model, test_feature):
+    predictions = model.predict(test_feature)
+    # Round predictions to get binary classification output
+    rounded_predictions = [round(x[0]) for x in predictions]
+    return rounded_predictions
+
+predictions = predict_cnn(trained_model, test_feature_reshaped)
+print("Predictions:", predictions)
 
 # Define the evaluation function
 def evaluate(test_target, y_pred):
