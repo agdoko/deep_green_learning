@@ -4,3 +4,4 @@ __pycache__/
 .ipynb_checkpoints/
 ee_auth/
 .env
+.python-version
