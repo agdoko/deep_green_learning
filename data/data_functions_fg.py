@@ -4,11 +4,15 @@ import io
 import requests
 import numpy as np
 from typing import Iterable
+import sys
+sys.path.insert(0, '/Users/felix/code/agdoko/deep_green_learning')
+import params
+
 
 """ Defines the functions used to get the data for initial model training. """
 
 # Remaps the target land classification from mutli-class to binary
-def get_target_image(target) -> ee.Image:
+def get_target_image(year) -> ee.Image:
     """ Buckets multi-class land cover classifications into 2 classes:
     1 = forest
     0 = non-forest """
@@ -16,13 +20,50 @@ def get_target_image(target) -> ee.Image:
     fromValues = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17]
     toValues = [1, 1, 1, 1, 1, 0, 0, 0,0, 0, 0,0,0,0,0,0,0]
     return (
-        target.first()
+        ee.ImageCollection(params.TARGET)
+        .filterDate(year)
+        .sort('system:time_start')  # Sort by time to get earliest image
+        .first()
         .select("LC_Type1")
         .remap(fromValues, toValues)
         .rename("landcover")
         .unmask(0)  # fill missing values with 0 (water)
         .byte()  # 9 classifications fit into an unsinged 8-bit integer
     )
+
+def get_input_image(year: int, feature_bands, square, type):
+    if type == "image":
+        return (
+            ee.ImageCollection(params.FEATURES)  # Sentinel-2 images
+            .filterDate(f"{int(year)}-1-1", f"{int(year)+3}-12-31")  # filter by year
+            .filterBounds(square)
+            #.filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 20))  # filter cloudy images
+            #.map(mask_sentinel2_clouds)  # mask/hide cloudy pixels
+            .select(feature_bands)  # select all bands starting with B
+            #.median()  # median of all non-cloudy pixels
+            #.unmask(default_value)  # default value for masked pixels
+            #.float()  # convert to float32
+            .sort('system:time_start')
+            .first()
+        )
+    elif type =="collection":
+
+        return (
+            ee.ImageCollection(params.FEATURES)  # Sentinel-2 images
+            .filterDate(f"{int(year)}-1-1", f"{int(year)+3}-12-31")  # filter by year
+            .filterBounds(square)
+            #.filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 20))  # filter cloudy images
+            #.map(mask_sentinel2_clouds)  # mask/hide cloudy pixels
+            .select(feature_bands)  # select all bands starting with B
+            #.median()  # median of all non-cloudy pixels
+            #.unmask(default_value)  # default value for masked pixels
+            #.float()  # convert to float32
+            .sort('system:time_start')
+        )
+
+    else:
+        raise ValueError("Invalid parameter value. Use 'image' or 'collection'.")
+
 
 # Getting the target sample points, equally stratified across both classes
 def sample_points(
@@ -38,10 +79,10 @@ def sample_points(
     for point in points.toList(points.size()).getInfo():
         yield point["geometry"]["coordinates"]
 
-""" # OBSOLETE
+# OBSOLETE
 # Getting the coordinates for the target points using Ana's random 100 approach
 def get_coordinates(points):
-
+    """ Returns a dictionary of square pixel coordinates for the target points. """
     target_dict = {}
     numb = 1
 
@@ -50,7 +91,7 @@ def get_coordinates(points):
         target_dict[f"P{numb}"] = list(point)
         numb +=1
 
-    return target_dict """
+    return target_dict
 
 # TO DO - make this more robust. it works for about 80 points but can break past 100
 # Getting the coordinates for the target points using Felix' stratified approach
@@ -60,21 +101,33 @@ def get_coordinates_felix(polygon, target):
     region = ee.Geometry.Polygon(polygon)
 
     # Getting the target image and creating a dictionary to store the coordinates
-    labels_image = get_target_image(target)
     target_dict = {}
     numb = 1
 
     # Iterating through the global image to generate stratified sampling coordinates
-    for point in sample_points(region, labels_image, points_per_class=5, scale=500):
+    for point in sample_points(region, target, points_per_class=2, scale=500):
         target_dict[f"P{numb}"] = point
         numb +=1
 
     return target_dict
 
-# Extracting the coordinates
+# Extracting the right patch from the images
+
+def get_patch(
+    image: ee.Image, patch_size: int) -> np.ndarray:
+
+    url = image.getDownloadURL(
+        {
+
+            "dimensions": [patch_size, patch_size],
+            "format": "NPY"
+        }
+    )
+    return url
 
 # Taking the coordinates and getting the features data for the target points
-def get_data(target_dict, year, feature_bands, target):
+
+def get_data(polygon, year, feature_bands):
     """ Get the feature and target data, both as ndarrays. """
 
     ### FEATURES ###
@@ -85,42 +138,35 @@ def get_data(target_dict, year, feature_bands, target):
 
     # Debugging counter for featuress
     features_counter = 0
-
+    target_dict = get_coordinates_felix(polygon, get_target_image(year))
     # Loop over each year from year
     for point in target_dict:
         # Get the picked point and create a 500m x 500m square around it
         picked_point = ee.Geometry.Point(target_dict[point])
-        square = picked_point.buffer(250).bounds()
+        square = picked_point.buffer(10 * 50 / 2, 1).bounds(1)
 
         # Define image collection features
-        image_collection_features = (ee.ImageCollection("COPERNICUS/S2_HARMONIZED")
-            .filterDate(f"{year}-1-1", f"{year+3}-12-31")
-            .filterBounds(square)
-            .select(feature_bands)
-            .sort('system:time_start'))
+        image_collection_features = get_input_image(year,feature_bands, square, "collection")
 
         # Check size of the image collection
-        count = image_collection_features.size().getInfo()
-        if count == 0:
-            print(f"Skipping point: {point}")
-            skipped_points.append(point)
-            continue
+        #count = image_collection_features.size().getInfo()
+        #if count == 0:
+        #    print(f"Skipping point: {point}")
+        #    skipped_points.append(point)
+        #    continue
 
         # Get the first image
-        image_features = image_collection_features.first()
+        image_features = get_input_image(year,feature_bands, square, "image")
 
         # Clip the gotten image to the 500m x 500m square
-        c_img_features = image_features.clip(square)
+        #c_img_features = image_features.clip(square)
 
-        # Get the download url for the clipped image
-        url = c_img_features.getDownloadUrl({
-            'scale': 10, # Because the feature satellite images are 10m x 10m per pixel in resolution
-            'format': 'NPY' # numpy
-            })
 
         # Get the image as a numpy array
-        image_array_features = requests.get(url)
-        image_array_features = np.load(io.BytesIO(image_array_features.content))
+
+        url = get_patch(image_features,50)
+        response = requests.get(url)
+        image_array_features= np.load(io.BytesIO(response.content), allow_pickle=True)
 
         # Creating the NDVI array - NDVI is an index used for detecting forest in the academic literature
         # Extract B4 (Red) and B8 (NIR)
@@ -137,18 +183,18 @@ def get_data(target_dict, year, feature_bands, target):
         features_counter += 1
 
     # Apply cropping to the numpy array to ensure consistent shape
-    cropped_arrays_features = []
+    #cropped_arrays_features = []
 
-    for arr in stacked_feature_list:
-        cropped_features = arr[:50, :50]
-        cropped_arrays_features.append(cropped_features)
+    #for arr in stacked_feature_list:
+    #    cropped_features = arr[:50, :50]
+    #    cropped_arrays_features.append(cropped_features)
 
-    feature_stacked_array = np.stack(cropped_arrays_features, axis=0)
+    feature_stacked_array = np.stack(stacked_feature_list, axis=0)
 
     ### TARGETS ###
 
     # Account for the fact that some points were skipped in feature dataset, and we must maintain matching target points that remain
-    new_target_dict = {k: v for k, v in target_dict.items() if k not in skipped_points}
+    #new_target_dict = {k: v for k, v in target_dict.items() if k not in skipped_points}
 
     # Initialize an empty list to hold the images and skipped points
     stacked_target_list = []
@@ -157,23 +203,20 @@ def get_data(target_dict, year, feature_bands, target):
     target_counter = 0
 
     # Loop over each year from year
-    for point in new_target_dict:
+    for point in target_dict:
         # Get the picked point and create a 500m x 500m square around it
         picked_point = ee.Geometry.Point(target_dict[point])
-        square = picked_point.buffer(250).bounds()
+        square = picked_point.buffer(500 * 1 / 2, 1).bounds(1)
 
         # Clip the gotten image to the 500m x 500m square
-        c_img_target = target.clip(square)
 
-        # Get the download url for the clipped image
-        url = c_img_target.getDownloadUrl({
-            'scale': 500, # Because the target satellite images are 500m x 500m per pixel in resolution
-            'format': 'NPY' # numpy
-            })
+        img_target = get_target_image(year)
+        c_img_target = img_target.clip(square)
 
         # Get the image as a numpy array
-        image_array_targets = requests.get(url)
-        image_array_targets = np.load(io.BytesIO(image_array_targets.content))
+        url = get_patch(c_img_target,1)
+        response = requests.get(url)
+        image_array_targets= np.load(io.BytesIO(response.content), allow_pickle=True)
 
         # Append the numpy array to the list
         stacked_target_list.append(image_array_targets)
@@ -182,13 +225,13 @@ def get_data(target_dict, year, feature_bands, target):
         target_counter += 1
 
     # Apply cropping to the numpy array to ensure consistent shape
-    cropped_arrays_targets = []
+    #cropped_arrays_targets = []
 
-    for arr in stacked_target_list:
-        cropped_targets = arr[:3, :3]
-        cropped_arrays_targets.append(cropped_targets)
+    #for arr in stacked_target_list:
+    #    cropped_targets = arr[:3, :3]
+    #    cropped_arrays_targets.append(cropped_targets)
 
-    target_stacked_array = np.stack(cropped_arrays_targets, axis=0)
+    target_stacked_array = np.stack(stacked_target_list, axis=0)
 
     ### TRAINING AND TEST DATASETS ###
 
