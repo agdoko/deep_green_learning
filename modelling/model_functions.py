@@ -53,3 +53,4 @@ def evaluate(test_target, y_pred):
     f1 = f1_score(true_values_1D, pred_values_1D)
 
     print("F1 Score:", f1)
+    return f1

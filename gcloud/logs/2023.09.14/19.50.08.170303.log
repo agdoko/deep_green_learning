@@ -1,0 +1,22 @@
+2023-09-14 19:50:08,174 DEBUG    root            Loaded Command Group: ['gcloud', 'auth']
+2023-09-14 19:50:08,186 DEBUG    root            Loaded Command Group: ['gcloud', 'auth', 'configure_docker']
+2023-09-14 19:50:08,189 DEBUG    root            Running [gcloud.auth.configure-docker] with arguments: []
+2023-09-14 19:50:09,416 INFO     ___FILE_ONLY___ Adding credentials for all GCR repositories.
+
+2023-09-14 19:50:09,423 WARNING  root            A long list of credential helpers may cause delays running 'docker build'. We recommend passing the registry name to configure only the registry you are using.
+2023-09-14 19:50:30,213 INFO     ___FILE_ONLY___ Docker configuration file updated.
+
+2023-09-14 19:50:30,215 DEBUG    root            Chosen display Format:default
+2023-09-14 19:50:30,217 INFO     root            Display format: "default"
+2023-09-14 19:50:30,220 DEBUG    root            Checking for updates...
+2023-09-14 19:50:30,278 DEBUG    urllib3.connectionpool Starting new HTTPS connection (1): dl.google.com:443
+2023-09-14 19:50:30,467 DEBUG    urllib3.connectionpool https://dl.google.com:443 "GET /dl/cloudsdk/channels/rapid/components-2.json HTTP/1.1" 200 209937
+2023-09-14 19:50:30,560 DEBUG    root            Updating notification cache...
+2023-09-14 19:50:30,561 DEBUG    root            Activating notification: [default]
+2023-09-14 19:50:30,561 INFO     ___FILE_ONLY___ 
+
+Updates are available for some Google Cloud CLI components.  To install them,
+please run:
+  $ gcloud components update
+
+

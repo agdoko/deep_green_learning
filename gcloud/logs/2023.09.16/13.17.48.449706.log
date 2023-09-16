@@ -1,0 +1,47 @@
+2023-09-16 13:17:48,453 DEBUG    root            Loaded Command Group: ['gcloud', 'auth']
+2023-09-16 13:17:48,455 DEBUG    root            Loaded Command Group: ['gcloud', 'auth', 'application_default']
+2023-09-16 13:17:48,466 DEBUG    root            Loaded Command Group: ['gcloud', 'auth', 'application-default', 'login']
+2023-09-16 13:17:48,470 DEBUG    root            Running [gcloud.auth.application-default.login] with arguments: [--client-id-file: "/Users/agdoko/.config/earthengine/credentials-client-id.json", --scopes: "['https://www.googleapis.com/auth/earthengine', 'https://www.googleapis.com/auth/devstorage.full_control']"]
+2023-09-16 13:18:41,055 DEBUG    requests_oauthlib.oauth2_session Generated new state cU6MWI0wGAoOdpvTKxS1KPDBcFJTq6.
+2023-09-16 13:18:41,598 INFO     ___FILE_ONLY___ Your browser has been opened to visit:
+
+    https://accounts.google.com/o/oauth2/auth?response_type=code&client_id=517222506229-vsmmajv00ul0bs7p89v5m89qs8eb9359.apps.googleusercontent.com&redirect_uri=http%3A%2F%2Flocalhost%3A8085%2F&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fearthengine+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdevstorage.full_control&state=cU6MWI0wGAoOdpvTKxS1KPDBcFJTq6&access_type=offline&code_challenge=5ZxllkgYr-52qHyDECWjOx-BeYaHCP92SSk4VbTY8gg&code_challenge_method=S256
+
+
+2023-09-16 13:18:51,764 INFO     google_auth_oauthlib.flow "GET /?state=cU6MWI0wGAoOdpvTKxS1KPDBcFJTq6&code=4/0Adeu5BXOt89ZAYOWux3DGnx1FkkXamwxJaHw4euwlZxkQG5QuevvgsX3m67JlYMhTCiFcw&scope=https://www.googleapis.com/auth/earthengine%20https://www.googleapis.com/auth/devstorage.full_control HTTP/1.1" 200 959
+2023-09-16 13:18:51,766 DEBUG    requests_oauthlib.oauth2_session Requesting url https://accounts.google.com/o/oauth2/token using method POST.
+2023-09-16 13:18:51,766 DEBUG    requests_oauthlib.oauth2_session Supplying headers {b'Accept': b'application/json', b'Content-Type': b'application/x-www-form-urlencoded;charset=UTF-8', b'user-agent': b'google-cloud-sdk gcloud/445.0.0 command/gcloud.auth.application-default.login invocation-id/d1fcdc3f8c904b41ac3a5172601ee9dc environment/None environment-version/None client-os/MACOSX client-os-ver/21.6.0 client-pltf-arch/x86_64 interactive/True from-script/True python/3.10.6 term/xterm-256color (Macintosh; Intel Mac OS X 21.6.0)'} and data {'grant_type': 'authorization_code', 'client_id': '517222506229-vsmmajv00ul0bs7p89v5m89qs8eb9359.apps.googleusercontent.com', 'client_secret': 'RUP0RZ6e0pPhDzsqIJ7KlNd1', 'code': '4/0Adeu5BXOt89ZAYOWux3DGnx1FkkXamwxJaHw4euwlZxkQG5QuevvgsX3m67JlYMhTCiFcw', 'redirect_uri': 'http://localhost:8085/', 'code_verifier': 'FqB1HRcfkvNMUhIwp9nvxex6e7FOiYyTHJ2isaOzavnA82C-PAt9DIdWzPGUzDQly3P6Udh3Acex0BmiAFFHt-pfRD2KBsy.AjFRJnj31Nn7A1u6IUaconCwRAm5o4IY'}
+2023-09-16 13:18:51,766 DEBUG    requests_oauthlib.oauth2_session Passing through key word arguments {'json': None, 'timeout': None, 'auth': None, 'verify': None, 'proxies': None}.
+2023-09-16 13:18:51,833 DEBUG    urllib3.connectionpool Starting new HTTPS connection (1): accounts.google.com:443
+2023-09-16 13:18:51,979 DEBUG    urllib3.connectionpool https://accounts.google.com:443 "POST /o/oauth2/token HTTP/1.1" 200 None
+2023-09-16 13:18:51,989 DEBUG    requests_oauthlib.oauth2_session Prepared fetch token request body grant_type=authorization_code&client_id=517222506229-vsmmajv00ul0bs7p89v5m89qs8eb9359.apps.googleusercontent.com&client_secret=RUP0RZ6e0pPhDzsqIJ7KlNd1&code=4%2F0Adeu5BXOt89ZAYOWux3DGnx1FkkXamwxJaHw4euwlZxkQG5QuevvgsX3m67JlYMhTCiFcw&redirect_uri=http%3A%2F%2Flocalhost%3A8085%2F&code_verifier=FqB1HRcfkvNMUhIwp9nvxex6e7FOiYyTHJ2isaOzavnA82C-PAt9DIdWzPGUzDQly3P6Udh3Acex0BmiAFFHt-pfRD2KBsy.AjFRJnj31Nn7A1u6IUaconCwRAm5o4IY
+2023-09-16 13:18:51,989 DEBUG    requests_oauthlib.oauth2_session Request to fetch token completed with status 200.
+2023-09-16 13:18:51,989 DEBUG    requests_oauthlib.oauth2_session Request headers were {'user-agent': b'google-cloud-sdk gcloud/445.0.0 command/gcloud.auth.application-default.login invocation-id/d1fcdc3f8c904b41ac3a5172601ee9dc environment/None environment-version/None client-os/MACOSX client-os-ver/21.6.0 client-pltf-arch/x86_64 interactive/True from-script/True python/3.10.6 term/xterm-256color (Macintosh; Intel Mac OS X 21.6.0)', 'Accept-Encoding': 'gzip, deflate', 'Accept': b'application/json', 'Connection': 'keep-alive', 'Content-Type': b'application/x-www-form-urlencoded;charset=UTF-8', 'Content-Length': '421'}
+2023-09-16 13:18:51,989 DEBUG    requests_oauthlib.oauth2_session Request body was grant_type=authorization_code&client_id=517222506229-vsmmajv00ul0bs7p89v5m89qs8eb9359.apps.googleusercontent.com&client_secret=RUP0RZ6e0pPhDzsqIJ7KlNd1&code=4%2F0Adeu5BXOt89ZAYOWux3DGnx1FkkXamwxJaHw4euwlZxkQG5QuevvgsX3m67JlYMhTCiFcw&redirect_uri=http%3A%2F%2Flocalhost%3A8085%2F&code_verifier=FqB1HRcfkvNMUhIwp9nvxex6e7FOiYyTHJ2isaOzavnA82C-PAt9DIdWzPGUzDQly3P6Udh3Acex0BmiAFFHt-pfRD2KBsy.AjFRJnj31Nn7A1u6IUaconCwRAm5o4IY
+2023-09-16 13:18:51,989 DEBUG    requests_oauthlib.oauth2_session Response headers were {'Date': 'Sat, 16 Sep 2023 12:18:52 GMT', 'Expires': 'Mon, 01 Jan 1990 00:00:00 GMT', 'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate', 'Pragma': 'no-cache', 'Content-Type': 'application/json; charset=utf-8', 'Vary': 'Origin, X-Origin, Referer', 'Content-Encoding': 'gzip', 'Server': 'scaffolding on HTTPServer2', 'X-XSS-Protection': '0', 'X-Frame-Options': 'SAMEORIGIN', 'X-Content-Type-Options': 'nosniff', 'Alt-Svc': 'h3=":443"; ma=2592000,h3-29=":443"; ma=2592000', 'Transfer-Encoding': 'chunked'} and content {
+  "access_token": "ya29.a0AfB_byDPMKONkk1mTAlVML4WEkaaoRh5ukwE4rxZDA_aBDzZ9m73KYy1PqjkoNpwTpIr6exNu34L2SLIefXq79HkKgL9lCZ1z78cGe7qF6yr1rBLmLvVsWPt2T_kiah2FJiuhusH_OjB8lxuCpyXWD31mZNYokZak_0fWxLfSwaCgYKAVYSARESFQGOcNnCLJaUxsvNu8F3cU9hncWv3w0177",
+  "expires_in": 3598,
+  "refresh_token": "1//03j5s9nhyy_RUCgYIARAAGAMSNwF-L9IrRAfnywg_jPv3DvrYT21UQxL-TcjvZf7i14qMSih5UDwktqJkIZDbSbRRTMKfsBP0asA",
+  "scope": "https://www.googleapis.com/auth/devstorage.full_control https://www.googleapis.com/auth/earthengine",
+  "token_type": "Bearer"
+}.
+2023-09-16 13:18:51,990 DEBUG    requests_oauthlib.oauth2_session Invoking 0 token response hooks.
+2023-09-16 13:18:51,990 DEBUG    requests_oauthlib.oauth2_session Obtained token {'access_token': 'ya29.a0AfB_byDPMKONkk1mTAlVML4WEkaaoRh5ukwE4rxZDA_aBDzZ9m73KYy1PqjkoNpwTpIr6exNu34L2SLIefXq79HkKgL9lCZ1z78cGe7qF6yr1rBLmLvVsWPt2T_kiah2FJiuhusH_OjB8lxuCpyXWD31mZNYokZak_0fWxLfSwaCgYKAVYSARESFQGOcNnCLJaUxsvNu8F3cU9hncWv3w0177', 'expires_in': 3598, 'refresh_token': '1//03j5s9nhyy_RUCgYIARAAGAMSNwF-L9IrRAfnywg_jPv3DvrYT21UQxL-TcjvZf7i14qMSih5UDwktqJkIZDbSbRRTMKfsBP0asA', 'scope': ['https://www.googleapis.com/auth/devstorage.full_control', 'https://www.googleapis.com/auth/earthengine'], 'token_type': 'Bearer', 'expires_at': 1694870329.990152}.
+2023-09-16 13:18:51,995 INFO     ___FILE_ONLY___ 
+Credentials saved to file: [/Users/agdoko/.config/gcloud/application_default_credentials.json]
+
+2023-09-16 13:18:51,996 INFO     ___FILE_ONLY___ 
+These credentials will be used by any library that requests Application Default Credentials (ADC).
+
+2023-09-16 13:18:51,997 DEBUG    root            Chosen display Format:none
+2023-09-16 13:18:51,999 INFO     root            Display format: "none"
+2023-09-16 13:18:52,003 DEBUG    root            Checking for updates...
+2023-09-16 13:18:52,024 DEBUG    urllib3.connectionpool Starting new HTTPS connection (1): dl.google.com:443
+2023-09-16 13:18:52,088 DEBUG    urllib3.connectionpool https://dl.google.com:443 "GET /dl/cloudsdk/channels/rapid/components-2.json HTTP/1.1" 200 209937
+2023-09-16 13:18:52,130 INFO     ___FILE_ONLY___ 
+
+Updates are available for some Google Cloud CLI components.  To install them,
+please run:
+  $ gcloud components update
+
+
