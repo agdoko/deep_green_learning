@@ -139,6 +139,7 @@ def get_data(target_dict, year, feature_bands, target):
     # Apply cropping to the numpy array to ensure consistent shape
     cropped_arrays_features = []
 
+
     for arr in stacked_feature_list:
         cropped_features = arr[:50, :50]
         cropped_arrays_features.append(cropped_features)
@@ -155,6 +156,7 @@ def get_data(target_dict, year, feature_bands, target):
 
     # Debugging counter for targets
     target_counter = 0
+
 
     # Loop over each year from year
     for point in new_target_dict:
