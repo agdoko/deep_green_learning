@@ -1,7 +1,7 @@
 # Required imports
 import ee
 import numpy as np
-from modelling.model_functions import baseline, evaluate, majority_pool, process_and_expand
+from modelling.model_functions import baseline, evaluate, majority_pool, process_and_expand, train_cnn
 from data.data_functions import get_data, get_target_image, get_coordinates_felix
 
 """ Provides the setpoint values according to which the data will be collected. """
@@ -29,13 +29,19 @@ feature_bands = ["B4", "B8"]
 # Getting data to evaluate the model
 train_f, train_t, test_f, test_t = get_data(get_coordinates_felix(polygon, target), int(f_date), feature_bands, get_target_image(target))
 
-processed_train_f = process_and_expand(train_f, "ndvi")
-processed_train_t = process_and_expand(train_t, "ndvi")
-processed_test_f = process_and_expand(test_f, "ndvi")
-processed_test_t = process_and_expand(test_t, "ndvi")
+processed_train_f = process_and_expand(train_f)
+processed_train_t = process_and_expand(train_t)
+processed_test_f = process_and_expand(test_f)
+processed_test_t = process_and_expand(test_t)
+
+#Train and predict CNN Model
+model = train_cnn(processed_train_f, processed_train_t)
+y_pred = model.predict(processed_test_f)
 
 # Test the evaluation function (using train rather than test just because it's more datat to check, in end will need to use test)
-evaluate(train_t, baseline(train_f))
+loss, f1_score = model.evaluate(processed_test_f, processed_test_t)
+print("Test Loss:", loss)
+print("Test F1 Score:", f1_score)
 
 # Test print shape of returned data
 #print(test_f.shape)
