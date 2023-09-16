@@ -23,6 +23,7 @@ polygon = [[[-145.7, 63.2], [-118.1, 22.3], [-78.2, 5.6], [-52.9, 47.6]]]
 # Global polygon, while minimising the amount of water
 #polygon = [[[-180, -60], [180, -60], [180, 85], [-180, 85], [-180, -60]]]
 
+
 # Select the feature bands
 feature_bands = ["B4", "B8"]
 

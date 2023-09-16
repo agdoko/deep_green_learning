@@ -21,7 +21,6 @@ from tensorflow.keras.layers import Input, Conv2D, BatchNormalization, MaxPoolin
 from sklearn.metrics import f1_score
 
 
-
 # Defining the majority pooling function for the baseline model
 def majority_pool(array):
     dt = np.dtype([("ndvi", np.int32)])

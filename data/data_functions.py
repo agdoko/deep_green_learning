@@ -157,6 +157,7 @@ def get_data(target_dict, year, feature_bands, target):
     # Debugging counter for targets
     target_counter = 0
 
+
     # Loop over each year from year
     for point in new_target_dict:
         # Get the picked point and create a 500m x 500m square around it
