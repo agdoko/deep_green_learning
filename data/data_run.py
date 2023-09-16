@@ -8,6 +8,7 @@ from data.data_functions import get_data, get_target_image, get_coordinates_feli
 # Initialise the Earth Engine module.
 ee.Initialize()
 
+
 # Defining the main year around which data will be collected
 f_date = '2017'
 

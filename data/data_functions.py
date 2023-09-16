@@ -139,6 +139,7 @@ def get_data(target_dict, year, feature_bands, target):
     # Apply cropping to the numpy array to ensure consistent shape
     cropped_arrays_features = []
 
+
     for arr in stacked_feature_list:
         cropped_features = arr[:50, :50]
         cropped_arrays_features.append(cropped_features)
@@ -205,4 +206,3 @@ def get_data(target_dict, year, feature_bands, target):
     test_feature = feature_stacked_array[split_index:]
     print(train_feature.shape, train_target.shape, test_feature.shape, test_target.shape)
     return train_feature, train_target, test_feature, test_target
-
