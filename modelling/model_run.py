@@ -1,7 +1,7 @@
 # Required imports
 import ee
 import numpy as np
-from modelling.model_functions import baseline, evaluate, majority_pool, process_and_expand, train_cnn
+from modelling.model_functions import baseline, evaluate_model, majority_pool, process_and_expand, train_cnn
 from data.data_functions import get_data, get_target_image, get_coordinates_felix
 
 """ Provides the setpoint values according to which the data will be collected. """

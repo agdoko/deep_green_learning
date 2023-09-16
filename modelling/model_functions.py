@@ -1,20 +1,22 @@
 # Required imports
 import numpy as np
-from tensorflow import keras
-from keras import models
-from keras import Sequential, layers
-import tensorflow as tf
+# from tensorflow import keras
+import tensorflow
+from tensorflow.keras import models
+from tensorflow.keras import Sequential, layers
 
-# from tensorflow.keras.models import Model
-# from tensorflow.keras.optimizers import Adam, Nadam
-# from tensorflow.keras import applications, optimizers
-# from tensorflow.keras.applications import InceptionResNetV2
-# from tensorflow.keras.applications.resnet50 import preprocess_input
+from tensorflow.keras.models import Model
+from tensorflow.keras.optimizers import Adam, Nadam
+from tensorflow.keras import applications, optimizers
+from tensorflow.keras.applications import InceptionResNetV2
+from tensorflow.keras.applications.resnet50 import preprocess_input
 
+
+from tensorflow.keras.metrics import Metric
 # from tensorflow.keras.preprocessing.image import ImageDataGenerator, load_img, img_to_array
-# from tensorflow.keras.utils import model_to_dot, plot_model, image_dataset_from_directory
-# from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping, CSVLogger, LearningRateScheduler
-# from tensorflow.keras.layers import Input, Conv2D, BatchNormalization, Activation, MaxPool2D, Conv2DTranspose, Concatenate, ZeroPadding2D, Dropout
+#from tensorflow.keras.utils import model_to_dot, plot_model, image_dataset_from_directory
+#from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping, CSVLogger, LearningRateScheduler
+from tensorflow.keras.layers import Input, Conv2D, BatchNormalization, MaxPooling2D, Dropout, Flatten, Dense, Reshape
 
 from sklearn.metrics import f1_score
 
@@ -102,7 +104,7 @@ def train_cnn(processed_train_f, processed_train_t):
     decoded = Reshape((3, 3, 1))(x)
 
     # Create the model
-    model = tf.keras.models.Model(input_img, decoded)
+    model = tensorflow.keras.models.Model(input_img, decoded)
 
     # Compile the model
     model.compile(optimizer='adam', loss='mse', metrics=[F1Score()])
@@ -155,7 +157,7 @@ def evaluate_model(model, processed_test_f, processed_test_t):
 #    print("F1 Score:", f1)
 
 #F1Score
-class F1Score(tf.keras.metrics.Metric):
+class F1Score(Metric):
 
     def __init__(self, name='f1_score', **kwargs):
         super(F1Score, self).__init__(name=name, **kwargs)
@@ -164,14 +166,14 @@ class F1Score(tf.keras.metrics.Metric):
         self.false_negatives = self.add_weight(name='fn', initializer='zeros')
 
     def update_state(self, y_true, y_pred, sample_weight=None):
-        y_pred = tf.round(y_pred)
-        values = tf.cast(y_true, tf.float32)
-        predictions = tf.cast(y_pred, tf.float32)
-        self.true_positives.assign_add(tf.reduce_sum(values * predictions))
-        self.false_positives.assign_add(tf.reduce_sum((1.0 - values) * predictions))
-        self.false_negatives.assign_add(tf.reduce_sum(values * (1.0 - predictions)))
+        y_pred = tensorflow.round(y_pred)
+        values = tensorflow.cast(y_true, tensorflow.float32)
+        predictions = tensorflow.cast(y_pred, tensorflow.float32)
+        self.true_positives.assign_add(tensorflow.reduce_sum(values * predictions))
+        self.false_positives.assign_add(tensorflow.reduce_sum((1.0 - values) * predictions))
+        self.false_negatives.assign_add(tensorflow.reduce_sum(values * (1.0 - predictions)))
 
     def result(self):
-        precision = self.true_positives / (self.true_positives + self.false_positives + tf.keras.backend.epsilon())
-        recall = self.true_positives / (self.true_positives + self.false_negatives + tf.keras.backend.epsilon())
-        return 2 * ((precision * recall) / (precision + recall + tf.keras.backend.epsilon()))
+        precision = self.true_positives / (self.true_positives + self.false_positives + tensorflow.keras.backend.epsilon())
+        recall = self.true_positives / (self.true_positives + self.false_negatives + tensorflow.keras.backend.epsilon())
+        return 2 * ((precision * recall) / (precision + recall + tensorflow.keras.backend.epsilon()))
