@@ -1,13 +1,15 @@
 # Required imports
 import ee
 from typing import Iterable
-from data.data_functions import get_data, get_target_image, get_coordinates_felix
+from data_functions_fg import get_data, get_target_image, get_coordinates_felix
+import sys
+sys.path.insert(0, '/Users/felix/code/agdoko/deep_green_learning')
+from params import MODEL_TARGET, POLYGON, DATA_DATE, FEATURE_BANDS
 
 """ Provides the setpoint values according to which the data will be collected. """
 
 # Initialise the Earth Engine module.
 ee.Initialize()
-
 
 # Defining the main year around which data will be collected
 f_date = '2017'
@@ -28,4 +30,10 @@ polygon = [[[-145.7, 63.2], [-118.1, 22.3], [-78.2, 5.6], [-52.9, 47.6]]]
 feature_bands = ["B4", "B8"]
 
 # Running the function get_coordinates to test the script
-get_data(get_coordinates_felix(polygon, target), int(f_date), feature_bands, get_target_image(target))
+get_data(POLYGON, DATA_DATE, FEATURE_BANDS)
+
+#if __name__ == "__main__":
+#    if MODEL_TARGET == "gcs":
+#        print("saving model to cloud")
+#    else:
+#        print("saving model locally")
