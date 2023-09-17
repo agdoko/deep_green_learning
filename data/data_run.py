@@ -9,7 +9,7 @@ from utils import auth_ee
 """ Provides the setpoint values according to which the data will be collected. """
 
 # Initialise the Earth Engine module.
-auth_ee()
+ee.Initialize()
 
 # Defining the main year around which data will be collected
 f_date = '2017'
