@@ -3,13 +3,15 @@ import ee
 from flask import Flask, jsonify, request
 import data.data_functions as dat # import the data functions
 import modelling.model_functions as mod # import the model functions
+from utils import auth_ee
 
 app = Flask(__name__)
 
 @app.route('/', methods=['POST'])
 def main_func():
     # HARDCODED / necessary? Initialise the Earth Engine module.
-    ee.Initialize()
+    print('Starting')
+    auth_ee()
 
     data = request.get_json()   # Get the data from the request. year + point
                                 # year: string of the requested year
@@ -30,5 +32,3 @@ def main_func():
     result = mod.evaluate(train_t, mod.baseline(train_f))
 
     return jsonify({"f1": result})
-
-
