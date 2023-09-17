@@ -2,3 +2,6 @@ raw_data/
 .DS_Store
 __pycache__/
 .ipynb_checkpoints/
+ee_auth/
+.env
+.python-version

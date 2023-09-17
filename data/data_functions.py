@@ -38,10 +38,10 @@ def sample_points(
     for point in points.toList(points.size()).getInfo():
         yield point["geometry"]["coordinates"]
 
-# OBSOLETE
+""" # OBSOLETE
 # Getting the coordinates for the target points using Ana's random 100 approach
 def get_coordinates(points):
-    """ Returns a dictionary of square pixel coordinates for the target points. """
+
     target_dict = {}
     numb = 1
 
@@ -50,7 +50,7 @@ def get_coordinates(points):
         target_dict[f"P{numb}"] = list(point)
         numb +=1
 
-    return target_dict
+    return target_dict """
 
 # TO DO - make this more robust. it works for about 80 points but can break past 100
 # Getting the coordinates for the target points using Felix' stratified approach
@@ -65,7 +65,7 @@ def get_coordinates_felix(polygon, target):
     numb = 1
 
     # Iterating through the global image to generate stratified sampling coordinates
-    for point in sample_points(region, labels_image, points_per_class=2, scale=500):
+    for point in sample_points(region, labels_image, points_per_class=5, scale=500):
         target_dict[f"P{numb}"] = point
         numb +=1
 
