@@ -105,7 +105,7 @@ def get_coordinates_felix(polygon, target):
     numb = 1
 
     # Iterating through the global image to generate stratified sampling coordinates
-    for point in sample_points(region, target, points_per_class=2, scale=500):
+    for point in sample_points(region, target, points_per_class=50, scale=500):
         target_dict[f"P{numb}"] = point
         numb +=1
 
@@ -149,11 +149,11 @@ def get_data(polygon, year, feature_bands):
         image_collection_features = get_input_image(year,feature_bands, square, "collection")
 
         # Check size of the image collection
-        #count = image_collection_features.size().getInfo()
-        #if count == 0:
-        #    print(f"Skipping point: {point}")
-        #    skipped_points.append(point)
-        #    continue
+        count = image_collection_features.size().getInfo()
+        if count == 0:
+            print(f"Skipping point: {point}")
+            skipped_points.append(point)
+            continue
 
         # Get the first image
         image_features = get_input_image(year,feature_bands, square, "image")
@@ -194,7 +194,7 @@ def get_data(polygon, year, feature_bands):
     ### TARGETS ###
 
     # Account for the fact that some points were skipped in feature dataset, and we must maintain matching target points that remain
-    #new_target_dict = {k: v for k, v in target_dict.items() if k not in skipped_points}
+    new_target_dict = {k: v for k, v in target_dict.items() if k not in skipped_points}
 
     # Initialize an empty list to hold the images and skipped points
     stacked_target_list = []
@@ -203,9 +203,9 @@ def get_data(polygon, year, feature_bands):
     target_counter = 0
 
     # Loop over each year from year
-    for point in target_dict:
+    for point in new_target_dict:
         # Get the picked point and create a 500m x 500m square around it
-        picked_point = ee.Geometry.Point(target_dict[point])
+        picked_point = ee.Geometry.Point(new_target_dict[point])
         square = picked_point.buffer(500 * 1 / 2, 1).bounds(1)
 
         # Clip the gotten image to the 500m x 500m square

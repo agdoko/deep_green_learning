@@ -97,10 +97,10 @@ def train_cnn(processed_train_f, processed_train_t):
     x = Dropout(0.5)(x)
 
     # Dense layer to get the desired number of features
-    x = Dense(3*3*1, activation='sigmoid')(x)
+    x = Dense(1*1*1, activation='sigmoid')(x)
 
     # Reshaping to the target shape
-    decoded = Reshape((3, 3, 1))(x)
+    decoded = Reshape((1, 1, 1))(x)
 
     # Create the model
     model = tensorflow.keras.models.Model(input_img, decoded)
