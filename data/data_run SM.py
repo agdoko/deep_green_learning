@@ -26,8 +26,10 @@ Bottom Left: [-0.166597, 51.446512]
 
 Bottom Right: [-0.166597, 51.441938]
 
-# Running the function get_coordinates to test the script
-get_data(coordinates, f_date, feature_bands)
+coordinates = #correct format for ee API!
+
+# Running the function get_coordinates to test the script, returns NDVI ndarray
+print(get_data(coordinates, f_date, feature_bands))
 
 #if __name__ == "__main__":
 #    if MODEL_TARGET == "gcs":
