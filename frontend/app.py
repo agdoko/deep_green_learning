@@ -2,6 +2,7 @@ import streamlit as st
 import folium
 from folium.plugins import Draw
 from streamlit_folium import st_folium
+from data_functions_SM import get_data
 
 # Set the title of your Streamlit app
 st.title("Forest Detection App")
@@ -67,6 +68,10 @@ selected_date = st.date_input("Select a date for satellite image analysis")
 
 # Add a button to initiate analysis
 if st.button("Analyze"):
-    # Replace this section with your forest detection logic
+    # Forest detection logic
+    # Ensure coordinates are in the format expected by ee
+    coordinates = [A1[0], A1[1], B1[0], B1[1]]
+
+
     st.write(f"Analyzing satellite image for {selected_date}...")
     # You can add code here to analyze the selected area for the presence of a forest.
