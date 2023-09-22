@@ -127,7 +127,23 @@ if st.button("Analyze"):
     print(y_pred.shape)
     print(y_pred)
 
-    is_forest = y_pred[0, 0, 0, 0] > 0.5  # Assuming a threshold of 0.5 for binary classification
+# First Plot
+fig1, ax1 = plt.subplots()
+cax1 = ax1.imshow(NDVI[:, :], cmap='RdYlGn', vmin=-1, vmax=1)
+plt.colorbar(cax1)
+st.write('First Plot')
+st.pyplot(fig1)
+# Second Plot
+
+fig2, ax2 = plt.subplots()
+color = 'green' if y_pred[0,0,0,0] else 'white'
+ax2.add_patch(plt.Rectangle((0, 0), 1, 1, fc=color))
+ax2.set_aspect('equal', 'box')
+ax2.set_axis_off()
+st.write('Second Plot')
+st.pyplot(fig2)
+
+'''is_forest = y_pred[0, 0, 0, 0] > 0.5  # Assuming a threshold of 0.5 for binary classification
     image_size = (100, 100)  # Replace with the desired image size
     color = [0, 255, 0] if is_forest else [255, 255, 255]
     forest_rgb = np.array(color).reshape(1, 1, 1, 3).repeat(image_size[0], axis=1).repeat(image_size[1], axis=2)
@@ -139,3 +155,33 @@ if st.button("Analyze"):
     # Use folium's built-in image_to_url utility function to convert the image file to a data URL
 
     image_url = image_to_url("forest_overlay.png")
+    print(image_url)'''
+
+        #'''# Assuming y_pred has values of 0 and 1 where 1 indicates forest
+    #forest_rgb = np.where(y_pred == 1, [0, 255, 0], [255, 255, 255])  # RGB values for green and white
+
+    # Reshape the array to have 3 channels
+    #forest_rgb = forest_rgb.reshape(*y_pred.shape, 3)
+
+    # Create an image using Pillow
+    #forest_image = Image.fromarray(np.uint8(forest_rgb))
+
+    # Save the image
+    #forest_image.save("forest_overlay.png")
+
+'''overlay = folium.raster_layers.ImageOverlay(
+        image=image_url,
+        bounds=[[coordinates[0], coordinates[1]], [coordinates[2], coordinates[3]]],
+        opacity=1.0,
+        interactive=True,
+        cross_origin=True,
+        zindex=1,)
+
+
+    overlay.add_to(original_map)
+    with c2:
+        # Redraw the map with the overlay
+        st_folium(original_map)'''
+
+print('Got to end of code :)')
+    # You can add code here to analyze the selected area for the presence of a forest.'''
