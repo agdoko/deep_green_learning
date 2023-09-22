@@ -6,11 +6,13 @@ from streamlit_folium import st_folium
 import sys
 import os
 import ee
+import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow
 from tensorflow import keras
+from PIL import Image
 #from tensorflow import predict
-
+from folium.utilities import image_to_url
 
 
 # Get the path to the parent directory
@@ -39,6 +41,7 @@ st.write(
     "the satellite image you'd like to analyze."
 )
 
+#@st.cache_data(allow_output_mutation=True)
 
 def create_map(center):
     m = folium.Map(
@@ -64,11 +67,12 @@ def create_map(center):
 
 st.title("Folium Map with Rectangle")
 
-c1, c2 = st.columns(2)
+c1, c2, c3 = st.columns(3)
 
 initial_center = [51.5328, -0.0769]
 with c1:
-    output = st_folium(create_map(initial_center))
+    original_map = create_map(initial_center)
+    output = st_folium(original_map)
 
 with c2:
     info = output.get("all_drawings")
@@ -104,16 +108,60 @@ if st.button("Analyze"):
     year = '2017'
 
     NDVI = get_data(coordinates, selected_date.year, feature_bands)
-    print(NDVI.shape)
+    #print(NDVI.shape)
     NDVI_expanded = np.expand_dims(NDVI, axis=0)
     NDVI_expanded = np.expand_dims(NDVI_expanded, axis=-1)
     st.write(f"Analyzing satellite image for {selected_date.year}...")
 
     model = load_model(model_path)
-    print(NDVI_expanded.shape)
+    #print(NDVI_expanded.shape)
     #print(model.summary())
 
     y_pred = model.predict(NDVI_expanded)
-    print(y_pred)
+    #print(y_pred)
+    #print(y_pred.shape)
+
+    print(y_pred.dtype)
     print(y_pred.shape)
-    # You can add code here to analyze the selected area for the presence of a forest.
+    print(y_pred)
+
+    is_forest = y_pred[0, 0, 0, 0] > 0.5  # Assuming a threshold of 0.5 for binary classification
+    image_size = (100, 100)  # Replace with the desired image size
+    color = [0, 255, 0] if is_forest else [255, 255, 255]
+    forest_rgb = np.array(color).reshape(1, 1, 1, 3).repeat(image_size[0], axis=1).repeat(image_size[1], axis=2)
+    forest_image = Image.fromarray(np.uint8(forest_rgb[0]))
+
+    # Save the image to a temporary file
+    forest_image.save("forest_overlay.png")
+
+    # Use folium's built-in image_to_url utility function to convert the image file to a data URL
+
+    image_url = image_to_url("forest_overlay.png")
+
+        #'''# Assuming y_pred has values of 0 and 1 where 1 indicates forest
+    #forest_rgb = np.where(y_pred == 1, [0, 255, 0], [255, 255, 255])  # RGB values for green and white
+
+    # Reshape the array to have 3 channels
+    #forest_rgb = forest_rgb.reshape(*y_pred.shape, 3)
+
+    # Create an image using Pillow
+    #forest_image = Image.fromarray(np.uint8(forest_rgb))
+
+    # Save the image
+    #forest_image.save("forest_overlay.png")
+
+    overlay = folium.raster_layers.ImageOverlay(
+        image=image_url,
+        bounds=[[coordinates[0], coordinates[1]], [coordinates[2], coordinates[3]]],
+        opacity=1.0,
+        interactive=True,
+        cross_origin=True,
+        zindex=1,)
+
+
+    overlay.add_to(original_map)
+    with c3:
+        # Redraw the map with the overlay
+        st_folium(original_map)
+    print('Got to end of code :)')
+    # You can add code here to analyze the selected area for the presence of a forest.'''
