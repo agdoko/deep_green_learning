@@ -2,7 +2,32 @@ import streamlit as st
 import folium
 from folium.plugins import Draw
 from streamlit_folium import st_folium
-from data_functions_SM import get_data
+#from deep_green_learning.data.data_functions_SM import get_data
+import sys
+import os
+import ee
+import numpy as np
+import tensorflow
+from tensorflow import keras
+#from tensorflow import predict
+
+
+
+# Get the path to the parent directory
+parent_dir = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
+
+# Construct the path to the .h5 file
+model_path = os.path.join(parent_dir, 'model.h5')
+
+# Append the parent directory to the Python path
+sys.path.append(parent_dir)
+
+from data.data_functions_SM import get_data
+from modelling.model_functions import load_model
+
+
+# ... rest of your code ...
+
 
 # Set the title of your Streamlit app
 st.title("Forest Detection App")
@@ -66,12 +91,29 @@ with c2:
 # Add a date input for satellite image analysis
 selected_date = st.date_input("Select a date for satellite image analysis")
 
+
+
 # Add a button to initiate analysis
 if st.button("Analyze"):
+    # Initialise the Earth Engine module.
+    ee.Initialize()
     # Forest detection logic
     # Ensure coordinates are in the format expected by ee
     coordinates = [A1[0], A1[1], B1[0], B1[1]]
+    feature_bands = ["B4", "B8"]
+    year = '2017'
 
+    NDVI = get_data(coordinates, selected_date.year, feature_bands)
+    print(NDVI.shape)
+    NDVI_expanded = np.expand_dims(NDVI, axis=0)
+    NDVI_expanded = np.expand_dims(NDVI_expanded, axis=-1)
+    st.write(f"Analyzing satellite image for {selected_date.year}...")
 
-    st.write(f"Analyzing satellite image for {selected_date}...")
+    model = load_model(model_path)
+    print(NDVI_expanded.shape)
+    #print(model.summary())
+
+    y_pred = model.predict(NDVI_expanded)
+    print(y_pred)
+    print(y_pred.shape)
     # You can add code here to analyze the selected area for the presence of a forest.

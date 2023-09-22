@@ -1,6 +1,6 @@
 # Required imports
 import numpy as np
-# from tensorflow import keras
+from tensorflow import keras
 import tensorflow
 from tensorflow.keras import models
 from tensorflow.keras import Sequential, layers
@@ -20,6 +20,9 @@ from tensorflow.keras.layers import Input, Conv2D, BatchNormalization, MaxPoolin
 
 from sklearn.metrics import f1_score
 
+def load_model(model_path):
+    model = keras.models.load_model(model_path)
+    return model
 
 # Defining the majority pooling function for the baseline model
 def majority_pool(array):
