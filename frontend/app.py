@@ -19,7 +19,7 @@ from folium.utilities import image_to_url
 parent_dir = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
 
 # Construct the path to the .h5 file
-model_path = os.path.join(parent_dir, 'model.h5')
+model_path = os.path.join(parent_dir, 'model_mvp.h5')
 
 # Append the parent directory to the Python path
 sys.path.append(parent_dir)
@@ -41,7 +41,7 @@ st.write(
     "the satellite image you'd like to analyze."
 )
 
-#@st.cache_data(allow_output_mutation=True)
+#@st.cache_data(persist=True)
 
 def create_map(center):
     m = folium.Map(
@@ -67,7 +67,7 @@ def create_map(center):
 
 st.title("Folium Map with Rectangle")
 
-c1, c2, c3 = st.columns(3)
+c1, c2 = st.columns(2)
 
 initial_center = [51.5328, -0.0769]
 with c1:
@@ -105,7 +105,7 @@ if st.button("Analyze"):
     # Ensure coordinates are in the format expected by ee
     coordinates = [A1[0], A1[1], B1[0], B1[1]]
     feature_bands = ["B4", "B8"]
-    year = '2017'
+    #year = '2017'
 
     NDVI = get_data(coordinates, selected_date.year, feature_bands)
     #print(NDVI.shape)
@@ -114,8 +114,10 @@ if st.button("Analyze"):
     st.write(f"Analyzing satellite image for {selected_date.year}...")
 
     model = load_model(model_path)
-    #print(NDVI_expanded.shape)
-    #print(model.summary())
+    print(NDVI_expanded.dtype)
+    print(NDVI_expanded.shape)
+    print(NDVI_expanded)
+    print(model.summary())
 
     y_pred = model.predict(NDVI_expanded)
     #print(y_pred)
@@ -137,31 +139,3 @@ if st.button("Analyze"):
     # Use folium's built-in image_to_url utility function to convert the image file to a data URL
 
     image_url = image_to_url("forest_overlay.png")
-
-        #'''# Assuming y_pred has values of 0 and 1 where 1 indicates forest
-    #forest_rgb = np.where(y_pred == 1, [0, 255, 0], [255, 255, 255])  # RGB values for green and white
-
-    # Reshape the array to have 3 channels
-    #forest_rgb = forest_rgb.reshape(*y_pred.shape, 3)
-
-    # Create an image using Pillow
-    #forest_image = Image.fromarray(np.uint8(forest_rgb))
-
-    # Save the image
-    #forest_image.save("forest_overlay.png")
-
-    overlay = folium.raster_layers.ImageOverlay(
-        image=image_url,
-        bounds=[[coordinates[0], coordinates[1]], [coordinates[2], coordinates[3]]],
-        opacity=1.0,
-        interactive=True,
-        cross_origin=True,
-        zindex=1,)
-
-
-    overlay.add_to(original_map)
-    with c3:
-        # Redraw the map with the overlay
-        st_folium(original_map)
-    print('Got to end of code :)')
-    # You can add code here to analyze the selected area for the presence of a forest.'''
