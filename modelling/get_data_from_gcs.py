@@ -15,8 +15,8 @@ storage_client = storage.Client()
 bucket = storage_client.bucket(params.BUCKET)
 
 # List all objects (files) in the specified GCS folder
-targets = bucket.list_blobs(prefix='Targets/')
-features = bucket.list_blobs(prefix='Features/')
+targets = bucket.list_blobs(prefix='Targets_npy/')
+features = bucket.list_blobs(prefix='Features_npy/')
 
 def get_data(targets, features):
 
@@ -66,3 +66,5 @@ def get_data(targets, features):
     print(train_feature.shape, train_target.shape, test_feature.shape, test_target.shape)
 
     return train_feature, train_target, test_feature, test_target
+
+get_data(targets, features)

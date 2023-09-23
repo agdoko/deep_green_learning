@@ -40,7 +40,11 @@ for blob in blobs_t:
     with rasterio.open(f'gs://{params.BUCKET}/{object_name}', 'r') as src:
         image_data = src.read()
         # You can perform operations on image_data if needed
-        image_array = np.append(image_data, np.nan)
+
+        reshaped_array = np.reshape(image_data, (1,1))
+        image_array = reshaped_array[ :, :, np.newaxis]
+        #print(image_array.shape)
+
         # Save the image_data as a numpy file
         with open('target.npy', 'wb') as ndarray_file:
             np.save(ndarray_file, image_array)
@@ -68,7 +72,10 @@ for blob in blobs_f:
     with rasterio.open(f'gs://{params.BUCKET}/{object_name}', 'r') as src:
         image_data = src.read()
         # You can perform operations on image_data if needed
-        image_array = np.append(image_data, np.nan)
+        reshaped_array = np.reshape(image_data, (50,50))
+        image_array = reshaped_array[ :, :, np.newaxis]
+        #print(image_array.shape)
+
         # Save the image_data as a numpy file
         with open('feature.npy', 'wb') as ndarray_file:
             np.save(ndarray_file, image_array)
