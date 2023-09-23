@@ -6,3 +6,4 @@ ee_auth/
 .env
 .python-version
 cred.json
+.streamlit/
