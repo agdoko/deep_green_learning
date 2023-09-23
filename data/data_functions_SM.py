@@ -62,7 +62,6 @@ def get_patch(
     return url
 
 # Taking the coordinates and getting the features data for the target points
-
 def get_data(coordinates, year, feature_bands):
     """ Get the feature and target data, both as ndarrays. """
 
