@@ -35,14 +35,13 @@ for point in target_dict:
 
 
     export_features = {
-        'image': image_features,
+        'image': NDVI,
         'description': 'features_tf',
         'bucket': params.BUCKET,
         'fileNamePrefix': f'Features_tf/feature_image_{point}',
         'fileFormat': 'GeoTIFF',
         'dimensions': [50,50],  # Set the scale (e.g., 500 meters)
-        'crs': crs_f,
-        'region': square  # Set the export region
+        #'region': square  # Set the export region
     }
 
     export_targets = {
@@ -52,7 +51,7 @@ for point in target_dict:
             'fileNamePrefix': f'Targets_tf/target_image_{point}',  # Adjust the export file name
             'fileFormat': 'GeoTIFF', # Use the desired format
             'dimensions': [1,1],  # Set the scale (e.g., 500 meters)
-            'region': square
+            #'region': square
         }
 
     task_f = ee.batch.Export.image.toCloudStorage(**export_features)
