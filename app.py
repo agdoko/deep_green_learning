@@ -16,7 +16,8 @@ from folium.utilities import image_to_url
 
 
 # Get the path to the parent directory
-parent_dir = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
+#parent_dir = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
+parent_dir = os.path.abspath(os.path.dirname(__file__))
 
 # Construct the path to the .h5 file
 model_path = os.path.join(parent_dir, 'model_mvp.h5')
@@ -26,7 +27,7 @@ sys.path.append(parent_dir)
 
 from data.data_functions_SM import get_data
 from modelling.model_functions import load_model
-
+from utils import auth_ee
 
 # ... rest of your code ...
 
@@ -100,7 +101,7 @@ selected_date = st.date_input("Select a date for satellite image analysis")
 # Add a button to initiate analysis
 if st.button("Analyze"):
     # Initialise the Earth Engine module.
-    ee.Initialize()
+    auth_ee()
     # Forest detection logic
     # Ensure coordinates are in the format expected by ee
     coordinates = [A1[0], A1[1], B1[0], B1[1]]
