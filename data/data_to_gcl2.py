@@ -8,6 +8,19 @@ from google.cloud import storage
 storage_client = storage.Client()
 
 bucket = storage_client.get_bucket(params.BUCKET)
+targets = 'Targets/'
+features = 'Features/'
+
+# List all objects (files) in the specified GCS folder
+blobs_t = bucket.list_blobs(prefix=targets)
+blobs_f = bucket.list_blobs(prefix=features)
+# Print the list of objects
+for blob in blobs_t:
+    #print(f'Object Name: {blob.name}')
+    blob.delete()
+for blob in blobs_f:
+    #print(f'Object Name: {blob.name}')
+    blob.delete()
 
 # Initialize Earth Engine
 ee.Initialize()
@@ -53,7 +66,7 @@ for point in target_dict:
         'image': NDVI,
         'description': 'features_tf',
         'bucket': params.BUCKET,
-        'fileNamePrefix': f'Features_tf/feature_image_{point}',
+        'fileNamePrefix': f'Features/feature_image_{point}',
         'fileFormat': 'GeoTIFF',
         'dimensions': [50,50],  # Set the scale (e.g., 500 meters)
         #'region': square  # Set the export region
@@ -63,7 +76,7 @@ for point in target_dict:
             'image': c_img_target,
             'description': 'target_tf',
             'bucket': params.BUCKET,
-            'fileNamePrefix': f'Targets_tf/target_image_{point}',  # Adjust the export file name
+            'fileNamePrefix': f'Targets/target_image_{point}',  # Adjust the export file name
             'fileFormat': 'GeoTIFF', # Use the desired format
             'dimensions': [1,1],  # Set the scale (e.g., 500 meters)
             #'region': square
