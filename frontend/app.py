@@ -24,7 +24,7 @@ model_path = os.path.join(parent_dir, 'model_mvp.h5')
 # Append the parent directory to the Python path
 sys.path.append(parent_dir)
 
-from data.data_functions_SM import get_data
+from data.data_functions_SM import get_all_data
 from modelling.model_functions import load_model
 
 
@@ -107,19 +107,24 @@ if st.button("Analyze"):
     feature_bands = ["B4", "B8"]
     #year = '2017'
 
-    NDVI = get_data(coordinates, selected_date.year, feature_bands)
+    NDVI = get_all_data(coordinates, selected_date.year, feature_bands)
+
+# assuming all arrays in NDVI_all have the same shape
+    NDVI_array = np.stack(NDVI, axis=0)  # adjust axis as necessary
+    print(NDVI_array.shape)
+
     #print(NDVI.shape)
-    NDVI_expanded = np.expand_dims(NDVI, axis=0)
-    NDVI_expanded = np.expand_dims(NDVI_expanded, axis=-1)
+    #NDVI_expanded = np.expand_dims(NDVI, axis=0)
+    #NDVI_expanded = np.expand_dims(NDVI_expanded, axis=-1)
     st.write(f"Analyzing satellite image for {selected_date.year}...")
 
     model = load_model(model_path)
-    print(NDVI_expanded.dtype)
-    print(NDVI_expanded.shape)
-    print(NDVI_expanded)
+    #print(NDVI_expanded.dtype)
+    #print(NDVI_expanded.shape)
+    #print(NDVI_expanded)
     print(model.summary())
 
-    y_pred = model.predict(NDVI_expanded)
+    y_pred = model.predict(NDVI_array)
     #print(y_pred)
     #print(y_pred.shape)
 
@@ -128,11 +133,15 @@ if st.button("Analyze"):
     print(y_pred)
 
 # First Plot
-fig1, ax1 = plt.subplots()
-cax1 = ax1.imshow(NDVI[:, :], cmap='RdYlGn', vmin=-1, vmax=1)
-plt.colorbar(cax1)
-st.write('First Plot')
-st.pyplot(fig1)
+# Plot all four 50x50 arrays in a 2x2 grid
+fig, axs = plt.subplots(2, 2, figsize=(10, 10))
+for i, ax in enumerate(axs.flat):
+    im = ax.imshow(NDVI_array[i, :, :], cmap='RdYlGn', vmin=-1, vmax=1)
+    ax.set_title(f'Array {i}')
+
+fig.colorbar(im, ax=axs, orientation='horizontal', fraction=.1)
+st.write('All Plots')
+st.pyplot(fig)
 # Second Plot
 
 fig2, ax2 = plt.subplots()
