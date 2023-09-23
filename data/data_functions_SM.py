@@ -7,7 +7,9 @@ from typing import Iterable
 import sys
 sys.path.insert(0, '/Users/felix/code/agdoko/deep_green_learning')
 import params
-
+# Import additional libraries
+import math
+from itertools import product
 
 """ Defines the functions used to get the data for initial model training. """
 
@@ -96,3 +98,51 @@ def get_data(coordinates, year, feature_bands):
         # Calculate NDVI - basically the normalised difference between Red and NIR bands
     NDVI = (B8 - B4) / (B8 + B4 + 1e-10)  # adding a small constant to avoid division by zero
     return NDVI
+
+def get_all_data(coordinates, year, feature_bands):
+    """ Get the feature and target data, both as ndarrays for all grid cells within the specified coordinates. """
+
+    # Determine the dimensions of the specified area in meters
+    width_m = abs(coordinates[2] - coordinates[0]) * 111320  # Assuming 111320 meters per degree longitude at the equator
+    height_m = abs(coordinates[3] - coordinates[1]) * 111320  # Assuming 111320 meters per degree latitude
+
+    # Determine the number of images required along the width and the height
+    images_width = math.ceil(width_m / (50 * 10))  # 50 pixels, 10m per pixel
+    images_height = math.ceil(height_m / (50 * 10))  # 50 pixels, 10m per pixel
+
+    # Split the specified area into grids
+    grid_coordinates = [
+        [
+            coordinates[0] + i * (50 * 10 / 111320),  # Longitude
+            coordinates[1] + j * (50 * 10 / 111320),  # Latitude
+            coordinates[0] + (i + 1) * (50 * 10 / 111320),  # Longitude
+            coordinates[1] + (j + 1) * (50 * 10 / 111320)  # Latitude
+        ]
+        for i, j in product(range(images_width), range(images_height))
+    ]
+
+    # Download the images and compute NDVI for each grid cell
+    all_ndvi = []
+    for grid_coord in grid_coordinates:
+        user_rectangle = ee.Geometry.Rectangle(grid_coord)
+        image_feature = get_input_image(year, feature_bands, user_rectangle, "image")  # assuming this function exists
+
+        # Get the image as a numpy array
+        url = get_patch(image_feature, 50)  # assuming this function exists
+        response = requests.get(url)
+        image_array_features = np.load(io.BytesIO(response.content), allow_pickle=True)
+
+        # Extract B4 (Red) and B8 (NIR)
+        B4 = image_array_features['B4'].astype(float)
+        B8 = image_array_features['B8'].astype(float)
+
+        # Calculate NDVI
+        NDVI = (B8 - B4) / (B8 + B4 + 1e-10)  # adding a small constant to avoid division by zero
+        all_ndvi.append(NDVI)
+
+    # Optionally, you may want to stitch the NDVI arrays together to create a single composite NDVI array
+    # ...
+
+    return all_ndvi  # or return the composite NDVI array
+
+# ... Your existing code ...
