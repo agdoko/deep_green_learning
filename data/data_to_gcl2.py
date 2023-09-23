@@ -12,6 +12,20 @@ bucket = storage_client.get_bucket(params.BUCKET)
 # Initialize Earth Engine
 ee.Initialize()
 
+def custom_ndvi(image):
+    # Select the red and near-infrared bands
+    band_red = image.select('B4')  # Replace 'B4' with your red band
+    band_nir = image.select('B8')  # Replace 'B8' with your NIR band
+
+    # Calculate NDVI with a small constant added to the denominator to avoid division by zero
+    constant = 1e-10
+    ndvi = band_nir.subtract(band_red).divide(band_nir.add(band_red).add(constant))
+
+    # Rename the output band to 'NDVI' for clarity
+    ndvi = ndvi.rename('NDVI')
+
+    return ndvi
+
 target_dict = get_coordinates_felix(params.POLYGON, get_target_image(params.DATA_DATE))
     # Loop over each year from year
 for point in target_dict:
@@ -24,25 +38,25 @@ for point in target_dict:
 
     # Get the first image
     image_features = get_input_image(params.DATA_DATE,params.FEATURE_BANDS, square, "image")
-    NDVI = image_features.normalizedDifference(['B4', 'B8'])
+    NDVI = custom_ndvi(image_features)
+
 
     img_target = get_target_image(params.DATA_DATE)
     c_img_target = img_target.clip(square)
 
-    projection_f = image_features.select(0).projection().getInfo()
-    crs_f = projection_f['crs']
-    crs_f_transform = projection_f['transform']
+    #projection_f = image_features.select(0).projection().getInfo()
+    #crs_f = projection_f['crs']
+    #crs_f_transform = projection_f['transform']
 
 
     export_features = {
-        'image': image_features,
+        'image': NDVI,
         'description': 'features_tf',
         'bucket': params.BUCKET,
         'fileNamePrefix': f'Features_tf/feature_image_{point}',
         'fileFormat': 'GeoTIFF',
         'dimensions': [50,50],  # Set the scale (e.g., 500 meters)
-        'crs': crs_f,
-        'region': square  # Set the export region
+        #'region': square  # Set the export region
     }
 
     export_targets = {
@@ -52,7 +66,7 @@ for point in target_dict:
             'fileNamePrefix': f'Targets_tf/target_image_{point}',  # Adjust the export file name
             'fileFormat': 'GeoTIFF', # Use the desired format
             'dimensions': [1,1],  # Set the scale (e.g., 500 meters)
-            'region': square
+            #'region': square
         }
 
     task_f = ee.batch.Export.image.toCloudStorage(**export_features)

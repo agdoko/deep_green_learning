@@ -105,7 +105,7 @@ def get_coordinates_felix(polygon, target):
     numb = 1
 
     # Iterating through the global image to generate stratified sampling coordinates
-    for point in sample_points(region, target, points_per_class=50, scale=500):
+    for point in sample_points(region, target, points_per_class=2, scale=500):
         target_dict[f"P{numb}"] = point
         numb +=1
 

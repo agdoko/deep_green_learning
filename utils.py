@@ -1,14 +1,21 @@
 import ee
 import os
+from google.cloud import storage
+import json
+import sys
+sys.path.insert(0, '/Users/felix/code/agdoko/deep_green_learning')
+import params
 
 
-def auth_ee():
-    service_account = os.environ.get('SERVICE_ACCOUNT')
-    print(service_account)
+
+
+
+def auth_ee(email, json_file):
+    #service_account = os.environ.get('SERVICE_ACCOUNT')
+    #print(service_account)
     try:
+        credentials = ee.ServiceAccountCredentials(email=email, key_data=json_file)
         print('We did it')
-        credentials = ee.ServiceAccountCredentials(service_account, 'ee_auth/semiotic-garden-395711-26d51679d83a.json')
-
         return ee.Initialize(credentials)
     except KeyError as error:
         print(error)
