@@ -100,9 +100,9 @@ with c2:
 
         st.write("Coordinates of the rectangle")
 
-        st.write(f"Top Left: {A1}")
-        st.write(f"Top Right: {A2}")
-        st.write(f"Bottom Left: {B1}")
+        st.write(f"Bottom Left: {A1}")
+        st.write(f"Top Left: {A2}")
+        st.write(f"Top Right: {B1}")
         st.write(f"Bottom Right: {B2}")
 
 
@@ -117,6 +117,7 @@ if st.button("Analyze"):
     auth_ee(st.secrets['client_email'], st.secrets['private_key'])
     # Forest detection logic
     # Ensure coordinates are in the format expected by ee
+    #e.g. ee.Geometry.Rectangle(minLng, minLat, maxLng, maxLat)/(xMin, yMin, xMax, yMax)
     coordinates = [A1[0], A1[1], B1[0], B1[1]]
     feature_bands = ["B4", "B8"]
     #year = '2017'

@@ -36,7 +36,7 @@ feature_bands = ["B4", "B8"]
 
 #Testing purpose
 #coordinates = [-0.173979, 51.441938, -0.166597, 51.446512]
-coordinates = [-0.21389, 51.461147, -0.184021, 51.480822]
+coordinates = [-0.117588, 51.532101, -0.10952, 51.536906]
 
 #Top Left: [-0.173979, 51.441938]
 #Top Right: [-0.173979, 51.446512]
@@ -47,20 +47,20 @@ coordinates = [-0.21389, 51.461147, -0.184021, 51.480822]
 
 # Running the function get_coordinates to test the script, returns NDVI ndarray
 NDVI_all = get_all_data(coordinates, f_date, feature_bands)
-print(NDVI_all)
-print(NDVI_all[0])
+#print(NDVI_all)
+#print(NDVI_all[0])
 
 #print(type(NDVI_all))
 
 # assuming all arrays in NDVI_all have the same shape
 NDVI_array = np.stack(NDVI_all, axis=0)  # adjust axis as necessary
-print(NDVI_array.shape)
-print(NDVI_array[0])
-print(NDVI_array[1])
-print(NDVI_array[2])
+#print(NDVI_array.shape)
+#print(NDVI_array[0])
+#print(NDVI_array[1])
+#print(NDVI_array[2])
 
 
-print(type(NDVI_array))
+#print(type(NDVI_array))
 
 # Reshape the array to have shape (N, 2500) and find unique slices
 unique_slices = np.unique(NDVI_array.reshape(NDVI_array.shape[0], -1), axis=0)
