@@ -6,17 +6,18 @@ import numpy as np
 from typing import Iterable
 import sys
 sys.path.insert(0, '/Users/felix/code/agdoko/deep_green_learning')
-import params
+#import params
 # Import additional libraries
 import math
 from itertools import product
+
 
 """ Defines the functions used to get the data for initial model training. """
 
 def get_input_image(year: int, feature_bands, square, type):
     if type == "image":
         return (
-            ee.ImageCollection(params.FEATURES)  # Sentinel-2 images
+            ee.ImageCollection("COPERNICUS/S2_HARMONIZED")  # Sentinel-2 images
             .filterDate(f"{int(year)}-1-1", f"{int(year)+3}-12-31")  # filter by year
             .filterBounds(square)
             #.filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 20))  # filter cloudy images
@@ -31,7 +32,7 @@ def get_input_image(year: int, feature_bands, square, type):
     elif type =="collection":
 
         return (
-            ee.ImageCollection(params.FEATURES)  # Sentinel-2 images
+            ee.ImageCollection("COPERNICUS/S2_HARMONIZED")  # Sentinel-2 images
             .filterDate(f"{int(year)}-1-1", f"{int(year)+3}-12-31")  # filter by year
             .filterBounds(square)
             #.filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 20))  # filter cloudy images
@@ -48,15 +49,12 @@ def get_input_image(year: int, feature_bands, square, type):
 
 
 # Extracting the right patch from the images
-# TO DO THIS ARGUMENT WILL NO LONGER BE PATCH SIZE, BUT INSTEAD THE LIST OF COORDINATES
 def get_patch(
     image: ee.Image, patch_size: int) -> np.ndarray:
 
-    # TO DO CONVERSION OF PATCH SIZE INPUT INTO PIXELS, DIMENSIONS KEY NEEDS PIXELS
     # YOUR CONVERSION HERE
     url = image.getDownloadURL(
         {
-                        # TO DO adjust the patch size to user rectangle and convert coorinate dimensions to pixels
             "dimensions": [patch_size, patch_size],
             "format": "NPY"
         }
@@ -120,13 +118,15 @@ def get_all_data(coordinates, year, feature_bands):
         ]
         for i, j in product(range(images_width), range(images_height))
     ]
+    print(grid_coordinates)
 
     # Download the images and compute NDVI for each grid cell
     all_ndvi = []
     for grid_coord in grid_coordinates:
+        print(grid_coord)
         user_rectangle = ee.Geometry.Rectangle(grid_coord)
         image_feature = get_input_image(year, feature_bands, user_rectangle, "image")  # assuming this function exists
-
+        #print(image_feature.getInfo())
         # Get the image as a numpy array
         url = get_patch(image_feature, 50)  # assuming this function exists
         response = requests.get(url)
