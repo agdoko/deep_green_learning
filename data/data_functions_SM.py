@@ -50,33 +50,35 @@ def get_input_image(year: int, feature_bands, square, type):
 
 def get_input_image_mean(year: int, feature_bands, square, type):
     if type == "image":
-        return (
+        collection = (
             ee.ImageCollection("COPERNICUS/S2_HARMONIZED")  # Sentinel-2 images
             .filterDate(f"{int(year)}-1-1", f"{int(year)}-12-31")  # filter by year
             .filterBounds(square)
-            #.filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 20))  # filter cloudy images
-            #.map(mask_sentinel2_clouds)  # mask/hide cloudy pixels
             .select(feature_bands)  # select all bands starting with B
-            #.median()  # median of all non-cloudy pixels
-            #.unmask(default_value)  # default value for masked pixels
-            #.float()  # convert to float32
             .sort('system:time_start')
-            .median()
         )
-    elif type =="collection":
 
-        return (
-            ee.ImageCollection("COPERNICUS/S2_HARMONIZED")  # Sentinel-2 images
-            .filterDate(f"{int(year)}-1-1", f"{int(year)+3}-12-31")  # filter by year
-            .filterBounds(square)
+        # Logging the size of the collection
+        print(f'Size of the collection: {collection.size().getInfo()}')
+
+        # Logging the first image info
+        first_image = collection.first()
+        #print(f'First image info: {first_image.getInfo()}')
+        return first_image
+    #elif type =="collection":
+
+        #return (
+            #ee.ImageCollection("COPERNICUS/S2_HARMONIZED")  # Sentinel-2 images
+            #.filterDate(f"{int(year)}-1-1", f"{int(year)+3}-12-31")  # filter by year
+            #.filterBounds(square)
             #.filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 20))  # filter cloudy images
             #.map(mask_sentinel2_clouds)  # mask/hide cloudy pixels
-            .select(feature_bands)  # select all bands starting with B
+            #.select(feature_bands)  # select all bands starting with B
             #.median()  # median of all non-cloudy pixels
             #.unmask(default_value)  # default value for masked pixels
             #.float()  # convert to float32
-            .sort('system:time_start')
-        )
+            #.sort('system:time_start')
+        #)
 
     else:
         raise ValueError("Invalid parameter value. Use 'image' or 'collection'.")
@@ -184,18 +186,20 @@ def get_all_data(coordinates, year, feature_bands):
     for grid_coord in grid_coordinates:
         print(grid_coord)
         user_rectangle = ee.Geometry.Rectangle(grid_coord)
-        #print(user_rectangle.coordinates())
+        #print(user_rectangle.getInfo())
         image_feature = get_input_image_mean(year, feature_bands, user_rectangle, "image")  # assuming this function exists
         #print(image_feature.getInfo())
         # Get the image as a numpy array
         url = get_patch(image_feature, 50)  # assuming this function exists
+        #print(url)
         response = requests.get(url)
         image_array_features = np.load(io.BytesIO(response.content), allow_pickle=True)
 
         # Extract B4 (Red) and B8 (NIR)
         B4 = image_array_features['B4'].astype(float)
         B8 = image_array_features['B8'].astype(float)
-
+        #print(B4)
+        #print(B8)
         # Calculate NDVI
         NDVI = (B8 - B4) / (B8 + B4 + 1e-10)  # adding a small constant to avoid division by zero
         all_ndvi.append(NDVI)
