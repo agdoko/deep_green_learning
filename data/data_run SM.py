@@ -41,7 +41,13 @@ feature_bands = ["B4", "B8"]
 #coordinates = [-0.119047, 51.513891, -0.113382, 51.516935]
 
 #2 x 2 coords
-coordinates = [-0.116129, 51.538935, -0.102911, 51.545608]
+#coordinates = [-0.116129, 51.538935, -0.102911, 51.545608]
+
+#4 x 4 coords
+#coordinates = [-0.140934, 51.487877, -0.112438, 51.504976]
+
+#London
+coordinates = [-0.531464, 51.252246, 0.276031, 51.70214]
 
 #Top Left: [-0.173979, 51.441938]
 #Top Right: [-0.173979, 51.446512]
@@ -59,7 +65,7 @@ NDVI_all = get_all_data(coordinates, f_date, feature_bands)
 
 # assuming all arrays in NDVI_all have the same shape
 NDVI_array = np.stack(NDVI_all, axis=0)  # adjust axis as necessary
-#print(NDVI_array.shape)
+print(NDVI_array.shape)
 print(NDVI_array)
 #print(NDVI_array[1])
 #print(NDVI_array[2])

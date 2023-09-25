@@ -7,6 +7,7 @@ import sys
 import os
 import ee
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 import numpy as np
 import tensorflow
 from tensorflow import keras
@@ -147,7 +148,38 @@ if st.button("Analyze"):
     print(y_pred.shape)
     print(y_pred)
 
+N = NDVI_array.shape[0]
+side = int(N**0.5)  # Assuming N is a perfect square for simplicity
+
+# Reshape the arrays to have shape (side, side, 50, 50) and (side, side, 1, 1)
+reshaped_NDVI = NDVI_array.reshape((side, side, 50, 50))
+reshaped_y_pred = y_pred.reshape((side, side, 1, 1))
+
+# Now concatenate along the last two dimensions to create a single large array
+stitched_NDVI = np.concatenate(np.concatenate(reshaped_NDVI, axis=2), axis=1)
+stitched_y_pred = np.concatenate(np.concatenate(reshaped_y_pred, axis=2), axis=1)
+
 # First Plot
+fig, ax = plt.subplots(figsize=(10, 10))
+im = ax.imshow(stitched_NDVI, cmap='RdYlGn', vmin=-1, vmax=1)
+ax.set_title('All NDVI Arrays Stitched Together')
+fig.colorbar(im, ax=ax, orientation='horizontal', fraction=.1)
+st.write('All Plots')
+st.pyplot(fig)
+
+# Update the color generation code:
+colors = stitched_y_pred.astype(np.float64)
+
+# Second Plot
+fig2, ax2 = plt.subplots(figsize=(2, 2))  # Adjust the figsize to your liking
+cmap = plt.cm.colors.ListedColormap(['white', 'green'])
+ax2.imshow(colors.reshape(stitched_y_pred.shape[:2]), cmap=cmap)
+ax2.set_aspect('equal', 'box')
+ax2.set_axis_off()
+st.write('Second Plot')
+st.pyplot(fig2)
+
+'''# First Plot
 # Plot all four 50x50 arrays in a 2x2 grid
 fig, axs = plt.subplots(2, 2, figsize=(10, 10))
 for i, ax in enumerate(axs.flat):
@@ -165,8 +197,8 @@ ax2.add_patch(plt.Rectangle((0, 0), 1, 1, fc=color))
 ax2.set_aspect('equal', 'box')
 ax2.set_axis_off()
 st.write('Second Plot')
-st.pyplot(fig2)
+st.pyplot(fig2)'''
 
 
 print('Got to end of code :)')
-    # You can add code here to analyze the selected area for the presence of a forest.'''
+    # You can add code here to analyze the selected area for the presence of a forest.

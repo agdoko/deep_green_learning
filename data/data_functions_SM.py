@@ -62,7 +62,7 @@ def get_input_image_mean(year: int, feature_bands, square, type):
         print(f'Size of the collection: {collection.size().getInfo()}')
 
         # Logging the first image info
-        first_image = collection.first()
+        first_image = collection.first().clip(square)
         #print(f'First image info: {first_image.getInfo()}')
         return first_image
     #elif type =="collection":
@@ -194,7 +194,7 @@ def get_all_data(coordinates, year, feature_bands):
         #print(url)
         response = requests.get(url)
         image_array_features = np.load(io.BytesIO(response.content), allow_pickle=True)
-
+        print(image_array_features.shape)
         # Extract B4 (Red) and B8 (NIR)
         B4 = image_array_features['B4'].astype(float)
         B8 = image_array_features['B8'].astype(float)
