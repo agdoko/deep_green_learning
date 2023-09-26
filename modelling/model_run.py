@@ -17,8 +17,8 @@ storage_client = storage.Client()
 bucket = storage_client.bucket(params.BUCKET)
 
 # List all objects (files) in the specified GCS folder
-targets = bucket.list_blobs(prefix='Targets/')
-features = bucket.list_blobs(prefix='Features/')
+targets = bucket.list_blobs(prefix='Targets_npy/')
+features = bucket.list_blobs(prefix='Features_npy/')
 
 # Getting data to evaluate the model
 train_f, train_t, test_f, test_t = get_data(targets,features)
