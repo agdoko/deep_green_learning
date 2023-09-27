@@ -5,7 +5,7 @@ import numpy as np
 import sys
 from apache_beam.options.pipeline_options import PipelineOptions
 sys.path.insert(0, '/Users/felix/code/agdoko/deep_green_learning')
-import params
+import params as params
 
 # Initialize Earth Engine
 ee.Initialize()

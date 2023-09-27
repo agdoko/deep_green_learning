@@ -2,7 +2,7 @@ import ee
 import sys
 from data_functions_fg import get_coordinates_felix, get_target_image, get_input_image
 sys.path.insert(0, '/Users/felix/code/agdoko/deep_green_learning')
-import params
+import params as params
 from google.cloud import storage
 
 storage_client = storage.Client()
