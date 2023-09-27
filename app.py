@@ -213,21 +213,21 @@ if st.button("Analyze"):
         cmap_name = 'white_to_green'
         deg_colormap = LinearSegmentedColormap.from_list(cmap_name, colors, N=n_bins)
 
-        # Visualization
-        fig, ax = plt.subplots(figsize=(10, 10))
-        im = ax.imshow(stitched_NDVI, cmap=deg_colormap, vmin=-1, vmax=1)
-        ax.set_title(f'All NDVI Arrays Stitched Together for {selected_date.year}')
-        ax.set_aspect('equal', 'box')  # Make it square
-        fig.colorbar(im, ax=ax, orientation='horizontal', fraction=.1)
-        st.pyplot(fig)
-
         # # Visualization
         # fig, ax = plt.subplots(figsize=(10, 10))
-        # im = ax.imshow(stitched_NDVI, cmap='RdYlGn', vmin=-1, vmax=1)
+        # im = ax.imshow(stitched_NDVI, cmap=deg_colormap, vmin=-1, vmax=1)
         # ax.set_title(f'All NDVI Arrays Stitched Together for {selected_date.year}')
         # ax.set_aspect('equal', 'box')  # Make it square
         # fig.colorbar(im, ax=ax, orientation='horizontal', fraction=.1)
         # st.pyplot(fig)
+
+        # Visualization
+        fig, ax = plt.subplots(figsize=(10, 10))
+        im = ax.imshow(stitched_NDVI, cmap='RdYlGn', vmin=-1, vmax=1)
+        ax.set_title(f'All NDVI Arrays Stitched Together for {selected_date.year}')
+        ax.set_aspect('equal', 'box')  # Make it square
+        fig.colorbar(im, ax=ax, orientation='horizontal', fraction=.1)
+        st.pyplot(fig)
 
     else:
         st.write("Please draw a rectangle on the map.")

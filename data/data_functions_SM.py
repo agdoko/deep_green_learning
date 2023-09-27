@@ -55,7 +55,8 @@ def get_input_image_mean(year: int, feature_bands, square, type):
             .filterDate(f"{int(year)}-1-1", f"{int(year)}-12-31")  # filter by year
             .filterBounds(square)
             .select(feature_bands)  # select all bands starting with B
-            .sort('system:time_start').filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 20))
+            .sort('system:time_start')
+            .filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 20))
         )
 
         # Logging the size of the collection
