@@ -1,15 +1,29 @@
 # Required imports
 import ee
+import os
 import io
 import requests
 import numpy as np
 from typing import Iterable
 import sys
+from sklearn.model_selection import train_test_split
 sys.path.insert(0, '/Users/felix/code/agdoko/deep_green_learning')
-import params
 
 
+# Get the directory containing the current script
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Construct the path to the parent directory
+parent_dir = os.path.join(current_dir, '..')
+
+# Convert the relative path to an absolute path
+parent_dir = os.path.abspath(parent_dir)
+
+# Append the parent directory to the Python path
+sys.path.append(parent_dir)
 """ Defines the functions used to get the data for initial model training. """
+
+import params as params
 
 # Remaps the target land classification from mutli-class to binary
 def get_target_image(year) -> ee.Image:
@@ -105,7 +119,7 @@ def get_coordinates_felix(polygon, target):
     numb = 1
 
     # Iterating through the global image to generate stratified sampling coordinates
-    for point in sample_points(region, target, points_per_class=2, scale=500):
+    for point in sample_points(region, target, points_per_class=100, scale=500):
         target_dict[f"P{numb}"] = point
         numb +=1
 
@@ -232,19 +246,24 @@ def get_data(polygon, year, feature_bands):
     #    cropped_arrays_targets.append(cropped_targets)
 
     target_stacked_array = np.stack(stacked_target_list, axis=0)
+    target_stacked_array= target_stacked_array[:,0,0]
 
+    print(feature_stacked_array.shape)
+    print(target_stacked_array.shape)
     ### TRAINING AND TEST DATASETS ###
 
+    train_feature, test_feature, train_target, test_target = train_test_split(
+    feature_stacked_array,
+    target_stacked_array,
+    test_size=0.2,  # 20% for testing
+    stratify=target_stacked_array,
+    random_state=42  # Set a random seed for reproducibility
+    )
+
+    print(train_feature.shape, train_target.shape, test_feature.shape, test_target.shape)
     # Separating the feature and target arrays into training and test datasets using 80/20 split
 
-    depth = target_stacked_array.shape[0]
-    split_index = int(depth * 0.8)  # 80% for training
 
-    # Train-test split
-    train_target = target_stacked_array[:split_index]
-    test_target = target_stacked_array[split_index:]
 
-    train_feature = feature_stacked_array[:split_index]
-    test_feature = feature_stacked_array[split_index:]
     print(train_feature.shape, train_target.shape, test_feature.shape, test_target.shape)
     return train_feature, train_target, test_feature, test_target

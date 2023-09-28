@@ -2,6 +2,7 @@
 import numpy as np
 from tensorflow import keras
 import tensorflow
+import matplotlib.pyplot as plt
 from tensorflow.keras import models
 from tensorflow.keras import Sequential, layers
 
@@ -119,7 +120,8 @@ def train_cnn(processed_train_f, processed_train_t):
         batch_size=32,
         shuffle=True
     )
-
+    plot = f1_plot(history)
+    #plot.savefig
     return model
 
 # Run a prediction from the CNN model
@@ -133,6 +135,29 @@ def evaluate_model(model, processed_test_f, processed_test_t):
     print("Test Loss:", loss)
     print("Test F1 Score:", f1_score)
     return loss, f1_score
+
+def f1_plot(history):
+
+    # Extract F1 scores from the training history
+    f1_scores = history.history['f1_score']  # Adjust 'f1_score' if your metric has a different name
+
+    # Create a new figure
+    fig, ax = plt.subplots()
+
+    # Plot the F1 scores
+    ax.plot(f1_scores, label='F1 Score')
+
+    # Add labels and legend
+    ax.set_xlabel('Epoch')
+    ax.set_ylabel('F1 Score')
+    ax.set_title('F1 Score Over Epochs')
+    ax.legend()
+
+    # Optionally, display the plot if needed
+    plt.show()
+
+    # Return the figure object
+    return fig
 
 #def predict_cnn(model, test_feature):
     #predictions = model.predict(test_feature)

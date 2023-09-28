@@ -4,7 +4,7 @@ from google.cloud import storage
 import os
 import sys
 sys.path.insert(0, '/Users/felix/code/agdoko/deep_green_learning')
-import params
+import params as params
 import rasterio
 from rasterio.io import MemoryFile
 
