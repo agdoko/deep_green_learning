@@ -22,6 +22,7 @@ def get_target_image(year) -> ee.Image:
     return (
         ee.ImageCollection(params.TARGET)
         .filterDate(year)
+        #.filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 20))
         .sort('system:time_start')  # Sort by time to get earliest image
         .first()
         .select("LC_Type1")
@@ -37,14 +38,15 @@ def get_input_image(year: int, feature_bands, square, type):
             ee.ImageCollection(params.FEATURES)  # Sentinel-2 images
             .filterDate(f"{int(year)}-1-1", f"{int(year)+3}-12-31")  # filter by year
             .filterBounds(square)
+            .filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 20))
             #.filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 20))  # filter cloudy images
             #.map(mask_sentinel2_clouds)  # mask/hide cloudy pixels
             .select(feature_bands)  # select all bands starting with B
-            #.median()  # median of all non-cloudy pixels
+            .median()  # median of all non-cloudy pixels
             #.unmask(default_value)  # default value for masked pixels
             #.float()  # convert to float32
-            .sort('system:time_start')
-            .first()
+            #.sort('system:time_start')
+            #.first()
         )
     elif type =="collection":
 
@@ -52,7 +54,7 @@ def get_input_image(year: int, feature_bands, square, type):
             ee.ImageCollection(params.FEATURES)  # Sentinel-2 images
             .filterDate(f"{int(year)}-1-1", f"{int(year)+3}-12-31")  # filter by year
             .filterBounds(square)
-            #.filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 20))  # filter cloudy images
+            .filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 20))  # filter cloudy images
             #.map(mask_sentinel2_clouds)  # mask/hide cloudy pixels
             .select(feature_bands)  # select all bands starting with B
             #.median()  # median of all non-cloudy pixels

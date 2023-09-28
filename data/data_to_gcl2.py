@@ -8,8 +8,8 @@ from google.cloud import storage
 storage_client = storage.Client()
 
 bucket = storage_client.get_bucket(params.BUCKET)
-targets = 'Targets/'
-features = 'Features/'
+targets = 'Targets_nc/'
+features = 'Features_nc/'
 
 # List all objects (files) in the specified GCS folder
 blobs_t = bucket.list_blobs(prefix=targets)
@@ -66,7 +66,7 @@ for point in target_dict:
         'image': NDVI,
         'description': 'features_tf',
         'bucket': params.BUCKET,
-        'fileNamePrefix': f'Features/feature_image_{point}',
+        'fileNamePrefix': f'Features_nc/feature_image_{point}',
         'fileFormat': 'GeoTIFF',
         'dimensions': [50,50],  # Set the scale (e.g., 500 meters)
         #'region': square  # Set the export region
@@ -76,7 +76,7 @@ for point in target_dict:
             'image': c_img_target,
             'description': 'target_tf',
             'bucket': params.BUCKET,
-            'fileNamePrefix': f'Targets/target_image_{point}',  # Adjust the export file name
+            'fileNamePrefix': f'Targets_nc/target_image_{point}',  # Adjust the export file name
             'fileFormat': 'GeoTIFF', # Use the desired format
             'dimensions': [1,1],  # Set the scale (e.g., 500 meters)
             #'region': square

@@ -17,8 +17,8 @@ storage_client = storage.Client()
 bucket = storage_client.bucket(params.BUCKET)
 
 # Specify the GCS folder path you want to process
-targets = 'Targets/'
-features = 'Features/'
+targets = 'Targets_nc/'
+features = 'Features_nc/'
 
 # List all objects (files) in the specified GCS folder
 blobs_t = bucket.list_blobs(prefix=targets)
@@ -49,6 +49,8 @@ for blob in blobs_f:
     output_path = f'Features_npy/{os.path.splitext(os.path.basename(object_name))[0]}.npy'
     #print(output_path)
     # Use rasterio to open the image from GCS
+
+    #if int(match.group(1)) >= 510:
     with rasterio.open(f'gs://{params.BUCKET}/{object_name}', 'r') as src:
         image_data = src.read()
         # You can perform operations on image_data if needed
