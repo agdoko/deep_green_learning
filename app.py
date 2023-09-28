@@ -32,7 +32,7 @@ model_path = os.path.join(parent_dir, 'model.h5')
 sys.path.append(parent_dir)
 
 from data.data_functions_SM import get_all_data
-#from modelling.model_functions import load_model
+from modelling.model_functions import baseline
 from utils import auth_ee
 
 # Initialize coordinates variable at the top-level
@@ -142,6 +142,12 @@ if st.button("Analyze"):
     # assuming all arrays in NDVI_all have the same shape
         NDVI_array = np.stack(NDVI, axis=0)  # adjust axis as necessary
         print(NDVI_array.shape)
+
+        # baseline predictions current year
+        NDVI_baseline = baseline(NDVI_array)
+        print(NDVI_baseline)
+        print(NDVI_baseline.shape)
+
 
         #prior year
         NDVI_prior_array = np.stack(NDVI_prior, axis=0)  # adjust axis as necessary
@@ -280,37 +286,6 @@ if st.button("Analyze"):
         fig.colorbar(im, ax=ax, orientation='horizontal', fraction=.1)
         st.pyplot(fig)
 
-
-
-
-
-
-        # # CHECKPOINT WORKING VISUALISATION OF PREDICTIONS
-        # # Assuming y_pred has shape (num_patches,)
-        # # Create 50x50 blocks for each predicted value
-        # y_pred_blocks = np.array([np.full((50, 50), val) for val in y_pred])
-
-        # # Reshape and stitch the prediction blocks
-        # reshaped_pred = y_pred_blocks.reshape((side_length, side_length, 50, 50))
-
-        # # Reorder the array for stitching
-        # reshaped_pred = np.flip(reshaped_pred, axis=0)
-
-        # # Diagonal swap for a 4-grid arrangement (and larger grids)
-        # reshaped_pred[[0, -1], :] = reshaped_pred[[-1, 0], :]
-
-        # # Stitch the prediction blocks
-        # stitched_pred_rows = [np.concatenate(reshaped_pred[i, :, :, :], axis=1) for i in range(side_length)]
-        # stitched_pred = np.concatenate(stitched_pred_rows, axis=0)
-
-        # # Visualization
-        # fig, ax = plt.subplots(figsize=(10, 10))
-        # im = ax.imshow(stitched_pred, cmap='Greens', vmin=0, vmax=1)
-        # ax.set_title(f'Predictions Stitched Together for {selected_date.year}')
-        # ax.set_aspect('equal', 'box')  # Make it square
-        # fig.colorbar(im, ax=ax, orientation='horizontal', fraction=.1)
-        # st.pyplot(fig)
-        # # CHECKPOINT WORKING VISUALISATIONS OF PREDICTIONS
 
     else:
         st.write("Please draw a rectangle on the map.")

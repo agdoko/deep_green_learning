@@ -25,23 +25,36 @@ def load_model(model_path):
     model = keras.models.load_model(model_path)
     return model
 
-# Defining the majority pooling function for the baseline model
 def majority_pool(array):
     dt = np.dtype([("ndvi", np.int32)])
-    pooled_array = np.zeros((array.shape[0], 3, 3), dtype=dt)
-
-    step_x = step_y = 16
+    pooled_array = np.zeros((array.shape[0], 1, 1), dtype=dt)
 
     for n in range(array.shape[0]):
-        for i in range(3):
-            x_start = i * step_x
-            for j in range(3):
-                y_start = j * step_y
-                quadrant = array[n, x_start:x_start+step_x, y_start:y_start+step_y]
-                majority = np.sum(quadrant) > (step_x * step_y // 2)
-                pooled_array[n, i, j]['ndvi'] = int(majority)
+        total = np.sum(array[n])
+        majority = total > ((50 * 50) // 2)
+        pooled_array[n, 0, 0]['ndvi'] = int(majority)
 
     return pooled_array
+
+
+# # CHECKPOINTING WORKING MAJORITY POOLING FUNCTION BUT LEGACY 3x3 format
+# # Defining the majority pooling function for the baseline model
+# def majority_pool(array):
+#     dt = np.dtype([("ndvi", np.int32)])
+#     pooled_array = np.zeros((array.shape[0], 3, 3), dtype=dt)
+
+#     step_x = step_y = 16
+
+#     for n in range(array.shape[0]):
+#         for i in range(3):
+#             x_start = i * step_x
+#             for j in range(3):
+#                 y_start = j * step_y
+#                 quadrant = array[n, x_start:x_start+step_x, y_start:y_start+step_y]
+#                 majority = np.sum(quadrant) > (step_x * step_y // 2)
+#                 pooled_array[n, i, j]['ndvi'] = int(majority)
+
+#     return pooled_array
 
 # Define the baseline model
 def baseline(test_feature):
