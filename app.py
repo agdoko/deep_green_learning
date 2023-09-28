@@ -139,7 +139,7 @@ if st.button("Analyze"):
         NDVI_prior = get_all_data(ee_coordinates, str(int(selected_date.year) - 1), feature_bands)
 
 
-    # assuming all arrays in NDVI_all have the same shape
+        # assuming all arrays in NDVI_all have the same shape
         NDVI_array = np.stack(NDVI, axis=0)  # adjust axis as necessary
         print(NDVI_array.shape)
 
