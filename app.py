@@ -16,22 +16,27 @@ from PIL import Image
 from folium.utilities import image_to_url
 from st_files_connection import FilesConnection
 import json
-
-
+import pyproj
+from pyproj import Transformer
+from tensorflow.keras.models import load_model
+from matplotlib.colors import LinearSegmentedColormap
 
 # Get the path to the parent directory
 #parent_dir = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
 parent_dir = os.path.abspath(os.path.dirname(__file__))
 
 # Construct the path to the .h5 file
-model_path = os.path.join(parent_dir, 'model_mvp.h5')
+model_path = os.path.join(parent_dir, 'model.h5')
 
 # Append the parent directory to the Python path
 sys.path.append(parent_dir)
 
 from data.data_functions_SM import get_all_data
-from modelling.model_functions import load_model
+#from modelling.model_functions import load_model
 from utils import auth_ee
+
+# Initialize coordinates variable at the top-level
+map_coordinates = None
 
 # ... rest of your code ...
 
@@ -92,12 +97,12 @@ with c1:
 with c2:
     info = output.get("all_drawings")
     if info:
-        coordinates = info[0]["geometry"]["coordinates"][0]
+        map_coordinates = info[0]["geometry"]["coordinates"][0]
 
-        A1 = coordinates[0]
-        A2 = coordinates[1]
-        B1 = coordinates[2]
-        B2 = coordinates[3]
+        A1 = map_coordinates[0]
+        A2 = map_coordinates[1]
+        B1 = map_coordinates[2]
+        B2 = map_coordinates[3]
 
         st.write("Coordinates of the rectangle")
 
@@ -105,6 +110,9 @@ with c2:
         st.write(f"Top Left: {A2}")
         st.write(f"Top Right: {B1}")
         st.write(f"Bottom Right: {B2}")
+
+    else:
+        st.write("Please draw a rectangle on the map.")
 
 
 # Add a date input for satellite image analysis
@@ -114,91 +122,198 @@ selected_date = st.date_input("Select a date for satellite image analysis")
 
 # Add a button to initiate analysis
 if st.button("Analyze"):
-    # Initialise the Earth Engine module.
-    auth_ee(st.secrets['client_email'], st.secrets['private_key'])
-    # Forest detection logic
-    # Ensure coordinates are in the format expected by ee
-    #e.g. ee.Geometry.Rectangle(minLng, minLat, maxLng, maxLat)/(xMin, yMin, xMax, yMax)
-    coordinates = [A1[0], A1[1], B1[0], B1[1]]
-    feature_bands = ["B4", "B8"]
-    #year = '2017'
+    if map_coordinates is not None:
+        # Initialise the Earth Engine module.
+        auth_ee(st.secrets['client_email'], st.secrets['private_key'])
+        # Forest detection logic
+        # Ensure coordinates are in the format expected by ee
+        #e.g. ee.Geometry.Rectangle(minLng, minLat, maxLng, maxLat)/(xMin, yMin, xMax, yMax)
+        ee_coordinates = [A1[0], A1[1], B1[0], B1[1]]
+        feature_bands = ["B4", "B8"]
+        #year = '2017'
 
-    NDVI = get_all_data(coordinates, selected_date.year, feature_bands)
+        # selected year from user
+        NDVI = get_all_data(ee_coordinates, selected_date.year, feature_bands)
 
-# assuming all arrays in NDVI_all have the same shape
-    NDVI_array = np.stack(NDVI, axis=0)  # adjust axis as necessary
-    print(NDVI_array.shape)
+        # year prior to selected year
+        NDVI_prior = get_all_data(ee_coordinates, str(int(selected_date.year) - 1), feature_bands)
 
-    #print(NDVI.shape)
-    #NDVI_expanded = np.expand_dims(NDVI, axis=0)
-    #NDVI_expanded = np.expand_dims(NDVI_expanded, axis=-1)
-    st.write(f"Analyzing satellite image for {selected_date.year}...")
 
-    model = load_model(model_path)
-    #print(NDVI_expanded.dtype)
-    #print(NDVI_expanded.shape)
-    #print(NDVI_expanded)
-    print(model.summary())
+    # assuming all arrays in NDVI_all have the same shape
+        NDVI_array = np.stack(NDVI, axis=0)  # adjust axis as necessary
+        print(NDVI_array.shape)
 
-    y_pred = model.predict(NDVI_array)
-    #print(y_pred)
-    #print(y_pred.shape)
+        #prior year
+        NDVI_prior_array = np.stack(NDVI_prior, axis=0)  # adjust axis as necessary
 
-    print(y_pred.dtype)
-    print(y_pred.shape)
-    print(y_pred)
+        #print(NDVI.shape)
+        #NDVI_expanded = np.expand_dims(NDVI, axis=0)
+        #NDVI_expanded = np.expand_dims(NDVI_expanded, axis=-1)
+        st.write(f"Analyzing satellite image for {selected_date.year}...")
 
-N = NDVI_array.shape[0]
-side = int(N**0.5)  # Assuming N is a perfect square for simplicity
+        model = load_model(model_path)
+        #print(NDVI_expanded.dtype)
+        #print(NDVI_expanded.shape)
+        #print(NDVI_expanded)
+        #print(model.summary())
 
-# Reshape the arrays to have shape (side, side, 50, 50) and (side, side, 1, 1)
-reshaped_NDVI = NDVI_array.reshape((side, side, 50, 50))
-reshaped_y_pred = y_pred.reshape((side, side, 1, 1))
 
-# Now concatenate along the last two dimensions to create a single large array
-stitched_NDVI = np.concatenate(np.concatenate(reshaped_NDVI, axis=2), axis=1)
-stitched_y_pred = np.concatenate(np.concatenate(reshaped_y_pred, axis=2), axis=1)
+        # prediction for current year
+        y_pred = model.predict(np.expand_dims(NDVI_array, axis=-1))
+        # prediction for year prior
+        y_pred_prior = model.predict(np.expand_dims(NDVI_prior_array, axis=-1))
+        print(y_pred)
+        print(y_pred.shape)
 
-# First Plot
-fig, ax = plt.subplots(figsize=(10, 10))
-im = ax.imshow(stitched_NDVI, cmap='RdYlGn', vmin=-1, vmax=1)
-ax.set_title('All NDVI Arrays Stitched Together')
-fig.colorbar(im, ax=ax, orientation='horizontal', fraction=.1)
-st.write('All Plots')
-st.pyplot(fig)
+        # print(y_pred.dtype)
+        # print(y_pred.shape)
+        # print(y_pred)
 
-# Update the color generation code:
-colors = stitched_y_pred.astype(np.float64)
+        print(ee_coordinates)
+        print(map_coordinates)
 
-# Second Plot
-fig2, ax2 = plt.subplots(figsize=(2, 2))  # Adjust the figsize to your liking
-cmap = plt.cm.colors.ListedColormap(['white', 'green'])
-ax2.imshow(colors.reshape(stitched_y_pred.shape[:2]), cmap=cmap)
-ax2.set_aspect('equal', 'box')
-ax2.set_axis_off()
-st.write('Second Plot')
-st.pyplot(fig2)
+        # Get the UTM zone number for the center of the area of interest
+        utm_zone = int((ee_coordinates[0] + 180) / 6) + 1
 
-'''# First Plot
-# Plot all four 50x50 arrays in a 2x2 grid
-fig, axs = plt.subplots(2, 2, figsize=(10, 10))
-for i, ax in enumerate(axs.flat):
-    im = ax.imshow(NDVI_array[i, :, :], cmap='RdYlGn', vmin=-1, vmax=1)
-    ax.set_title(f'Array {i}')
+        # Define the projection transformation
+        project_latlon_to_utm = pyproj.Transformer.from_crs(
+            crs_from='epsg:4326',  # WGS 84
+            crs_to=f'epsg:326{utm_zone}',  # UTM Zone
+            always_xy=True  # x, y order; longitude, latitude
+        ).transform
+        project_utm_to_latlon = pyproj.Transformer.from_crs(
+            crs_from=f'epsg:326{utm_zone}',  # UTM Zone
+            crs_to='epsg:4326',  # WGS 84
+            always_xy=True  # x, y order; longitude, latitude
+        ).transform
 
-fig.colorbar(im, ax=axs, orientation='horizontal', fraction=.1)
-st.write('All Plots')
-st.pyplot(fig)
-# Second Plot
+        # Convert the geographic coordinates to UTM coordinates
+        coordinates_utm = project_latlon_to_utm(ee_coordinates[0], ee_coordinates[1]), \
+                      project_latlon_to_utm(ee_coordinates[2], ee_coordinates[3])
 
-fig2, ax2 = plt.subplots()
-color = 'green' if y_pred[0,0,0,0] else 'white'
-ax2.add_patch(plt.Rectangle((0, 0), 1, 1, fc=color))
-ax2.set_aspect('equal', 'box')
-ax2.set_axis_off()
-st.write('Second Plot')
-st.pyplot(fig2)'''
+        # Determine the dimensions of the specified area in meters
+        width_m = abs(coordinates_utm[1][0] - coordinates_utm[0][0])
+        height_m = abs(coordinates_utm[1][1] - coordinates_utm[0][1])
+
+        print(width_m)
+        print(height_m)
+
+        # Reshape based on natural breaks for square shape current year
+        total_patches = NDVI_array.shape[0]
+        side_length = 1
+
+        while (side_length + 1) ** 2 <= total_patches:
+            side_length += 1
+
+        closest_square = side_length ** 2
+
+
+        NDVI_array = NDVI_array[:closest_square, :, :]
+
+
+
+        # reshape current year
+        reshaped_NDVI = NDVI_array.reshape((side_length, side_length, 50, 50))
+
+        #TODO IF THERE IS TIME - FIX THIS TILING AND REORIENTATION OF FEATURES, THEN IMPLEMENT FOR PREDICITONS
+        # Reorder the array for stitching
+        reshaped_NDVI = np.flip(reshaped_NDVI, axis=0)
+
+        # Diagonal swap for a 4-grid arrangement (and larger grids)
+        reshaped_NDVI[[0, -1], :] = reshaped_NDVI[[-1, 0], :]
+
+        # Stitch the images
+        stitched_NDVI_rows = [np.concatenate(reshaped_NDVI[i, :, :, :], axis=1) for i in range(side_length)]
+        stitched_NDVI = np.concatenate(stitched_NDVI_rows, axis=0)
+        #TODO IF THERE IS TIME - FIX THIS TILING AND REORIENTATION OF FEATURES, THEN IMPLEMENT FOR PREDICITONS
+
+
+
+
+        # # CHECKPOINT WORKING TILING AND REORIENTATION OF FEATURES
+        # reshaped_NDVI = NDVI_array.reshape((side_length, side_length, 50, 50))
+
+
+        # # Stitch the images
+        # stitched_NDVI_rows = [np.concatenate(reshaped_NDVI[i, :, :], axis=1) for i in range(side_length)]
+        # stitched_NDVI = np.concatenate(stitched_NDVI_rows, axis=0)
+        # # CHECKPOINT WORKING TILING AND REORIENTATION OF FEATURES
+
+        # Visualization of features
+        fig, ax = plt.subplots(figsize=(10, 10))
+        im = ax.imshow(stitched_NDVI, cmap='RdYlGn', vmin=-1, vmax=1)
+        ax.set_title(f'All NDVI Arrays Stitched Together for {selected_date.year}')
+        ax.set_aspect('equal', 'box')  # Make it square
+        fig.colorbar(im, ax=ax, orientation='horizontal', fraction=.1)
+        st.pyplot(fig)
+
+
+        # Assuming y_pred and y_pred_prior have shape (num_patches,)
+        # Create 50x50 blocks for each predicted value
+        y_pred_blocks = np.array([np.full((50, 50), val) for val in y_pred])
+        y_pred_prior_blocks = np.array([np.full((50, 50), val) for val in y_pred_prior])
+
+        # Reshape and stitch the prediction blocks
+        def reshape_and_stitch(y_blocks):
+            reshaped = y_blocks.reshape((side_length, side_length, 50, 50))
+            reshaped = np.flip(reshaped, axis=0)
+            reshaped[[0, -1], :] = reshaped[[-1, 0], :]
+            stitched_rows = [np.concatenate(reshaped[i, :, :, :], axis=1) for i in range(side_length)]
+            return np.concatenate(stitched_rows, axis=0)
+
+        stitched_pred = reshape_and_stitch(y_pred_blocks)
+        stitched_pred_prior = reshape_and_stitch(y_pred_prior_blocks)
+
+        # Visualization for current year
+        fig, ax = plt.subplots(figsize=(10, 10))
+        im = ax.imshow(stitched_pred, cmap='Greens', vmin=0, vmax=1)
+        ax.set_title(f'Predictions for {selected_date.year}')
+        ax.set_aspect('equal', 'box')
+        fig.colorbar(im, ax=ax, orientation='horizontal', fraction=.1)
+        st.pyplot(fig)
+
+        # Visualization for prior year
+        fig, ax = plt.subplots(figsize=(10, 10))
+        im = ax.imshow(stitched_pred_prior, cmap='Greens', vmin=0, vmax=1)
+        ax.set_title(f'Predictions for {selected_date.year - 1}')
+        ax.set_aspect('equal', 'box')
+        fig.colorbar(im, ax=ax, orientation='horizontal', fraction=.1)
+        st.pyplot(fig)
+
+
+
+
+
+
+        # # CHECKPOINT WORKING VISUALISATION OF PREDICTIONS
+        # # Assuming y_pred has shape (num_patches,)
+        # # Create 50x50 blocks for each predicted value
+        # y_pred_blocks = np.array([np.full((50, 50), val) for val in y_pred])
+
+        # # Reshape and stitch the prediction blocks
+        # reshaped_pred = y_pred_blocks.reshape((side_length, side_length, 50, 50))
+
+        # # Reorder the array for stitching
+        # reshaped_pred = np.flip(reshaped_pred, axis=0)
+
+        # # Diagonal swap for a 4-grid arrangement (and larger grids)
+        # reshaped_pred[[0, -1], :] = reshaped_pred[[-1, 0], :]
+
+        # # Stitch the prediction blocks
+        # stitched_pred_rows = [np.concatenate(reshaped_pred[i, :, :, :], axis=1) for i in range(side_length)]
+        # stitched_pred = np.concatenate(stitched_pred_rows, axis=0)
+
+        # # Visualization
+        # fig, ax = plt.subplots(figsize=(10, 10))
+        # im = ax.imshow(stitched_pred, cmap='Greens', vmin=0, vmax=1)
+        # ax.set_title(f'Predictions Stitched Together for {selected_date.year}')
+        # ax.set_aspect('equal', 'box')  # Make it square
+        # fig.colorbar(im, ax=ax, orientation='horizontal', fraction=.1)
+        # st.pyplot(fig)
+        # # CHECKPOINT WORKING VISUALISATIONS OF PREDICTIONS
+
+    else:
+        st.write("Please draw a rectangle on the map.")
 
 
 print('Got to end of code :)')
-    # You can add code here to analyze the selected area for the presence of a forest.
