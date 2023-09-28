@@ -119,7 +119,7 @@ def get_coordinates_felix(polygon, target):
     numb = 1
 
     # Iterating through the global image to generate stratified sampling coordinates
-    for point in sample_points(region, target, points_per_class=80, scale=500):
+    for point in sample_points(region, target, points_per_class=90, scale=500):
         target_dict[f"P{numb}"] = point
         numb +=1
 
@@ -159,14 +159,11 @@ def get_data(polygon, year, feature_bands):
         picked_point = ee.Geometry.Point(target_dict[point])
         square = picked_point.buffer(10 * 50 / 2, 1).bounds(1)
 
-
-        # Get the first image
-        image_features = get_input_image(year,feature_bands, square, "image")
         # Define image collection features
-        #image_collection_features = get_input_image(year,feature_bands, square, "collection")
+        image_collection_features = get_input_image(year,feature_bands, square, "collection")
 
         # Check size of the image collection
-        count = image_features.size().getInfo()
+        count = image_collection_features.size().getInfo()
         if count == 0:
             print(f"Skipping point: {point}")
             skipped_points.append(point)
@@ -176,12 +173,12 @@ def get_data(polygon, year, feature_bands):
         #image_features = get_input_image(year,feature_bands, square, "image")
 
         # Clip the gotten image to the 500m x 500m square
-        c_img_features = image_features.clip(square)
+        image_features = get_input_image(year,feature_bands, square, "image")
 
 
         # Get the image as a numpy array
 
-        url = get_patch(c_img_features,50)
+        url = get_patch(image_features,50)
         response = requests.get(url)
         image_array_features= np.load(io.BytesIO(response.content), allow_pickle=True)
 
