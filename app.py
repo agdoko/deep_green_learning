@@ -32,7 +32,7 @@ model_path = os.path.join(parent_dir, 'model.h5')
 sys.path.append(parent_dir)
 
 from data.data_functions_SM import get_all_data
-#from modelling.model_functions import load_model
+from modelling.model_functions import baseline
 from utils import auth_ee
 
 # Initialize coordinates variable at the top-level
@@ -139,24 +139,27 @@ if st.button("Analyze"):
         NDVI_prior = get_all_data(ee_coordinates, str(int(selected_date.year) - 1), feature_bands)
 
 
-    # assuming all arrays in NDVI_all have the same shape
+        # assuming all arrays in NDVI_all have the same shape
         NDVI_array = np.stack(NDVI, axis=0)  # adjust axis as necessary
+        print(NDVI_array)
         print(NDVI_array.shape)
 
-        #prior year
+        # baseline predictions current year
+        NDVI_baseline = baseline(NDVI_array)
+        print(NDVI_baseline)
+        print(NDVI_baseline.shape)
+
+        #prior year model prediction
         NDVI_prior_array = np.stack(NDVI_prior, axis=0)  # adjust axis as necessary
 
-        #print(NDVI.shape)
-        #NDVI_expanded = np.expand_dims(NDVI, axis=0)
-        #NDVI_expanded = np.expand_dims(NDVI_expanded, axis=-1)
+        # baseline predictions prior year
+        NDVI_baseline_prior = baseline(NDVI_prior_array)
+        print(NDVI_baseline_prior)
+        print(NDVI_baseline_prior.shape)
+
         st.write(f"Analyzing satellite image for {selected_date.year}...")
 
         model = load_model(model_path)
-        #print(NDVI_expanded.dtype)
-        #print(NDVI_expanded.shape)
-        #print(NDVI_expanded)
-        #print(model.summary())
-
 
         # prediction for current year
         y_pred = model.predict(np.expand_dims(NDVI_array, axis=-1))
@@ -164,10 +167,6 @@ if st.button("Analyze"):
         y_pred_prior = model.predict(np.expand_dims(NDVI_prior_array, axis=-1))
         print(y_pred)
         print(y_pred.shape)
-
-        # print(y_pred.dtype)
-        # print(y_pred.shape)
-        # print(y_pred)
 
         print(ee_coordinates)
         print(map_coordinates)
@@ -210,8 +209,6 @@ if st.button("Analyze"):
 
         NDVI_array = NDVI_array[:closest_square, :, :]
 
-
-
         # reshape current year
         reshaped_NDVI = NDVI_array.reshape((side_length, side_length, 50, 50))
 
@@ -226,9 +223,6 @@ if st.button("Analyze"):
         stitched_NDVI_rows = [np.concatenate(reshaped_NDVI[i, :, :, :], axis=1) for i in range(side_length)]
         stitched_NDVI = np.concatenate(stitched_NDVI_rows, axis=0)
         #TODO IF THERE IS TIME - FIX THIS TILING AND REORIENTATION OF FEATURES, THEN IMPLEMENT FOR PREDICITONS
-
-
-
 
         # # CHECKPOINT WORKING TILING AND REORIENTATION OF FEATURES
         # reshaped_NDVI = NDVI_array.reshape((side_length, side_length, 50, 50))
@@ -250,11 +244,15 @@ if st.button("Analyze"):
         # Just like we truncate the features for visualisation, we need to do the same with the predictions
         y_pred = y_pred[:closest_square, :, :, :]
         y_pred_prior = y_pred[:closest_square, :, :, :]
+        NDVI_baseline = np.expand_dims(NDVI_baseline[:closest_square, :, :], axis=-1)
+        NDVI_baseline_prior = np.expand_dims(NDVI_baseline_prior[:closest_square, :, :], axis=-1)
 
         # Assuming y_pred and y_pred_prior have shape (num_patches,)
         # Create 50x50 blocks for each predicted value
         y_pred_blocks = np.array([np.full((50, 50), val) for val in y_pred])
         y_pred_prior_blocks = np.array([np.full((50, 50), val) for val in y_pred_prior])
+        NDVI_baseline_blocks = np.array([np.full((50, 50), val) for val in NDVI_baseline])
+        NDVI_baseline_prior_blocks = np.array([np.full((50, 50), val) for val in NDVI_baseline_prior])
 
         # Reshape and stitch the prediction blocks
         def reshape_and_stitch(y_blocks):
@@ -266,6 +264,8 @@ if st.button("Analyze"):
 
         stitched_pred = reshape_and_stitch(y_pred_blocks)
         stitched_pred_prior = reshape_and_stitch(y_pred_prior_blocks)
+        stitched_baseline = reshape_and_stitch(NDVI_baseline_blocks)
+        stitched_baseline_prior = reshape_and_stitch(NDVI_baseline_prior_blocks)
 
         # Visualization for current year
         fig, ax = plt.subplots(figsize=(10, 10))
@@ -283,37 +283,22 @@ if st.button("Analyze"):
         fig.colorbar(im, ax=ax, orientation='horizontal', fraction=.1)
         st.pyplot(fig)
 
+        # Baseline Visualization for current year
+        fig, ax = plt.subplots(figsize=(10, 10))
+        im = ax.imshow(stitched_baseline['ndvi'].astype(float), cmap='Greens', vmin=0, vmax=1)
+        ax.set_title(f'Baseline for {selected_date.year}')
+        ax.set_aspect('equal', 'box')
+        fig.colorbar(im, ax=ax, orientation='horizontal', fraction=.1)
+        st.pyplot(fig)
 
+        # Baseline Visualization for prior year
+        fig, ax = plt.subplots(figsize=(10, 10))
+        im = ax.imshow(stitched_baseline_prior['ndvi'].astype(float), cmap='Greens', vmin=0, vmax=1)
+        ax.set_title(f'Baseline for {selected_date.year - 1}')
+        ax.set_aspect('equal', 'box')
+        fig.colorbar(im, ax=ax, orientation='horizontal', fraction=.1)
+        st.pyplot(fig)
 
-
-
-
-        # # CHECKPOINT WORKING VISUALISATION OF PREDICTIONS
-        # # Assuming y_pred has shape (num_patches,)
-        # # Create 50x50 blocks for each predicted value
-        # y_pred_blocks = np.array([np.full((50, 50), val) for val in y_pred])
-
-        # # Reshape and stitch the prediction blocks
-        # reshaped_pred = y_pred_blocks.reshape((side_length, side_length, 50, 50))
-
-        # # Reorder the array for stitching
-        # reshaped_pred = np.flip(reshaped_pred, axis=0)
-
-        # # Diagonal swap for a 4-grid arrangement (and larger grids)
-        # reshaped_pred[[0, -1], :] = reshaped_pred[[-1, 0], :]
-
-        # # Stitch the prediction blocks
-        # stitched_pred_rows = [np.concatenate(reshaped_pred[i, :, :, :], axis=1) for i in range(side_length)]
-        # stitched_pred = np.concatenate(stitched_pred_rows, axis=0)
-
-        # # Visualization
-        # fig, ax = plt.subplots(figsize=(10, 10))
-        # im = ax.imshow(stitched_pred, cmap='Greens', vmin=0, vmax=1)
-        # ax.set_title(f'Predictions Stitched Together for {selected_date.year}')
-        # ax.set_aspect('equal', 'box')  # Make it square
-        # fig.colorbar(im, ax=ax, orientation='horizontal', fraction=.1)
-        # st.pyplot(fig)
-        # # CHECKPOINT WORKING VISUALISATIONS OF PREDICTIONS
 
     else:
         st.write("Please draw a rectangle on the map.")
