@@ -26,7 +26,7 @@ from matplotlib.colors import LinearSegmentedColormap
 parent_dir = os.path.abspath(os.path.dirname(__file__))
 
 # Construct the path to the .h5 file
-model_path = os.path.join(parent_dir, 'model_mvp.h5')
+model_path = os.path.join(parent_dir, 'model.h5')
 
 # Append the parent directory to the Python path
 sys.path.append(parent_dir)
@@ -132,11 +132,19 @@ if st.button("Analyze"):
         feature_bands = ["B4", "B8"]
         #year = '2017'
 
+        # selected year from user
         NDVI = get_all_data(ee_coordinates, selected_date.year, feature_bands)
+
+        # year prior to selected year
+        NDVI_prior = get_all_data(ee_coordinates, str(int(selected_date.year) - 1), feature_bands)
+
 
     # assuming all arrays in NDVI_all have the same shape
         NDVI_array = np.stack(NDVI, axis=0)  # adjust axis as necessary
-        #print(NDVI_array.shape)
+        print(NDVI_array.shape)
+
+        #prior year
+        NDVI_prior_array = np.stack(NDVI_prior, axis=0)  # adjust axis as necessary
 
         #print(NDVI.shape)
         #NDVI_expanded = np.expand_dims(NDVI, axis=0)
@@ -149,7 +157,11 @@ if st.button("Analyze"):
         #print(NDVI_expanded)
         #print(model.summary())
 
-        y_pred = model.predict(NDVI_array)
+
+        # prediction for current year
+        y_pred = model.predict(np.expand_dims(NDVI_array, axis=-1))
+        # prediction for year prior
+        y_pred_prior = model.predict(np.expand_dims(NDVI_prior_array, axis=-1))
         print(y_pred)
         print(y_pred.shape)
 
@@ -186,48 +198,119 @@ if st.button("Analyze"):
         print(width_m)
         print(height_m)
 
-        # Reshape based on natural breaks for square shape
+        # Reshape based on natural breaks for square shape current year
         total_patches = NDVI_array.shape[0]
-        side_length = int(np.sqrt(total_patches))
+        side_length = 1
 
+        while (side_length + 1) ** 2 <= total_patches:
+            side_length += 1
+
+        closest_square = side_length ** 2
+
+
+        NDVI_array = NDVI_array[:closest_square, :, :]
+
+
+
+        # reshape current year
         reshaped_NDVI = NDVI_array.reshape((side_length, side_length, 50, 50))
+
+        #TODO IF THERE IS TIME - FIX THIS TILING AND REORIENTATION OF FEATURES, THEN IMPLEMENT FOR PREDICITONS
+        # Reorder the array for stitching
+        reshaped_NDVI = np.flip(reshaped_NDVI, axis=0)
+
+        # Diagonal swap for a 4-grid arrangement (and larger grids)
+        reshaped_NDVI[[0, -1], :] = reshaped_NDVI[[-1, 0], :]
 
         # Stitch the images
         stitched_NDVI_rows = [np.concatenate(reshaped_NDVI[i, :, :, :], axis=1) for i in range(side_length)]
         stitched_NDVI = np.concatenate(stitched_NDVI_rows, axis=0)
+        #TODO IF THERE IS TIME - FIX THIS TILING AND REORIENTATION OF FEATURES, THEN IMPLEMENT FOR PREDICITONS
 
 
-        # # Determine the number of images required along the width and the height
-        # images_width = int(np.ceil(width_m / (50 * 10)))
-        # images_height = int(np.ceil(height_m / (50 * 10)))
 
-        # # Reshape based on computed images_width and images_height
-        # reshaped_NDVI = NDVI_array.reshape((images_height, images_width, 50, 50))
+
+        # # CHECKPOINT WORKING TILING AND REORIENTATION OF FEATURES
+        # reshaped_NDVI = NDVI_array.reshape((side_length, side_length, 50, 50))
+
 
         # # Stitch the images
-        # stitched_NDVI = np.concatenate(np.concatenate(reshaped_NDVI, axis=2), axis=1)
+        # stitched_NDVI_rows = [np.concatenate(reshaped_NDVI[i, :, :], axis=1) for i in range(side_length)]
+        # stitched_NDVI = np.concatenate(stitched_NDVI_rows, axis=0)
+        # # CHECKPOINT WORKING TILING AND REORIENTATION OF FEATURES
 
-        # Custom colormap
-        colors = [(1, 1, 1), (0, 0.5, 0)]  # White to deep green
-        n_bins = 100
-        cmap_name = 'white_to_green'
-        deg_colormap = LinearSegmentedColormap.from_list(cmap_name, colors, N=n_bins)
-
-        # # Visualization
-        # fig, ax = plt.subplots(figsize=(10, 10))
-        # im = ax.imshow(stitched_NDVI, cmap=deg_colormap, vmin=-1, vmax=1)
-        # ax.set_title(f'All NDVI Arrays Stitched Together for {selected_date.year}')
-        # ax.set_aspect('equal', 'box')  # Make it square
-        # fig.colorbar(im, ax=ax, orientation='horizontal', fraction=.1)
-        # st.pyplot(fig)
-
-        # Visualization
+        # Visualization of features
         fig, ax = plt.subplots(figsize=(10, 10))
         im = ax.imshow(stitched_NDVI, cmap='RdYlGn', vmin=-1, vmax=1)
         ax.set_title(f'All NDVI Arrays Stitched Together for {selected_date.year}')
         ax.set_aspect('equal', 'box')  # Make it square
         fig.colorbar(im, ax=ax, orientation='horizontal', fraction=.1)
         st.pyplot(fig)
+
+
+        # Assuming y_pred and y_pred_prior have shape (num_patches,)
+        # Create 50x50 blocks for each predicted value
+        y_pred_blocks = np.array([np.full((50, 50), val) for val in y_pred])
+        y_pred_prior_blocks = np.array([np.full((50, 50), val) for val in y_pred_prior])
+
+        # Reshape and stitch the prediction blocks
+        def reshape_and_stitch(y_blocks):
+            reshaped = y_blocks.reshape((side_length, side_length, 50, 50))
+            reshaped = np.flip(reshaped, axis=0)
+            reshaped[[0, -1], :] = reshaped[[-1, 0], :]
+            stitched_rows = [np.concatenate(reshaped[i, :, :, :], axis=1) for i in range(side_length)]
+            return np.concatenate(stitched_rows, axis=0)
+
+        stitched_pred = reshape_and_stitch(y_pred_blocks)
+        stitched_pred_prior = reshape_and_stitch(y_pred_prior_blocks)
+
+        # Visualization for current year
+        fig, ax = plt.subplots(figsize=(10, 10))
+        im = ax.imshow(stitched_pred, cmap='Greens', vmin=0, vmax=1)
+        ax.set_title(f'Predictions for {selected_date.year}')
+        ax.set_aspect('equal', 'box')
+        fig.colorbar(im, ax=ax, orientation='horizontal', fraction=.1)
+        st.pyplot(fig)
+
+        # Visualization for prior year
+        fig, ax = plt.subplots(figsize=(10, 10))
+        im = ax.imshow(stitched_pred_prior, cmap='Greens', vmin=0, vmax=1)
+        ax.set_title(f'Predictions for {selected_date.year - 1}')
+        ax.set_aspect('equal', 'box')
+        fig.colorbar(im, ax=ax, orientation='horizontal', fraction=.1)
+        st.pyplot(fig)
+
+
+
+
+
+
+        # # CHECKPOINT WORKING VISUALISATION OF PREDICTIONS
+        # # Assuming y_pred has shape (num_patches,)
+        # # Create 50x50 blocks for each predicted value
+        # y_pred_blocks = np.array([np.full((50, 50), val) for val in y_pred])
+
+        # # Reshape and stitch the prediction blocks
+        # reshaped_pred = y_pred_blocks.reshape((side_length, side_length, 50, 50))
+
+        # # Reorder the array for stitching
+        # reshaped_pred = np.flip(reshaped_pred, axis=0)
+
+        # # Diagonal swap for a 4-grid arrangement (and larger grids)
+        # reshaped_pred[[0, -1], :] = reshaped_pred[[-1, 0], :]
+
+        # # Stitch the prediction blocks
+        # stitched_pred_rows = [np.concatenate(reshaped_pred[i, :, :, :], axis=1) for i in range(side_length)]
+        # stitched_pred = np.concatenate(stitched_pred_rows, axis=0)
+
+        # # Visualization
+        # fig, ax = plt.subplots(figsize=(10, 10))
+        # im = ax.imshow(stitched_pred, cmap='Greens', vmin=0, vmax=1)
+        # ax.set_title(f'Predictions Stitched Together for {selected_date.year}')
+        # ax.set_aspect('equal', 'box')  # Make it square
+        # fig.colorbar(im, ax=ax, orientation='horizontal', fraction=.1)
+        # st.pyplot(fig)
+        # # CHECKPOINT WORKING VISUALISATIONS OF PREDICTIONS
 
     else:
         st.write("Please draw a rectangle on the map.")
