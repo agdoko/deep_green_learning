@@ -6,8 +6,10 @@ from get_data_from_gcs import get_data
 import sys
 sys.path.insert(0, '/Users/felix/code/agdoko/deep_green_learning')
 import params
-
+import os
 """ Provides the setpoint values according to which the data will be collected. """
+# Get the directory containing the current script
+current_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Initialize Earth Engine
 ee.Initialize()
@@ -41,8 +43,10 @@ print("Test Loss:", loss)
 print("Test F1 Score:", f1_score)
 
 # Test print shape of returned data
-#print(test_f.shape)
-#print(test_t.shape)
+print(test_f.shape)
+print(test_t.shape)
+
+
 
 # Test majority pool function
 #result = majority_pool(test_f)

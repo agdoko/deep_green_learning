@@ -2,7 +2,7 @@ from google.cloud import storage
 import json
 import sys
 sys.path.insert(0, '/Users/felix/code/agdoko/deep_green_learning')
-import params
+import params as params
 
 # Initialize the Google Cloud Storage client
 client = storage.Client()

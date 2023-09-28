@@ -7,16 +7,21 @@ import sys
 import os
 import ee
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 import numpy as np
 import tensorflow
 from tensorflow import keras
 from PIL import Image
 #from tensorflow import predict
 from folium.utilities import image_to_url
+from st_files_connection import FilesConnection
+import json
+
 
 
 # Get the path to the parent directory
-parent_dir = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
+#parent_dir = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
+parent_dir = os.path.abspath(os.path.dirname(__file__))
 
 # Construct the path to the .h5 file
 model_path = os.path.join(parent_dir, 'model_mvp.h5')
@@ -24,12 +29,22 @@ model_path = os.path.join(parent_dir, 'model_mvp.h5')
 # Append the parent directory to the Python path
 sys.path.append(parent_dir)
 
-from data.data_functions_SM import get_data
+from data.data_functions_SM import get_all_data
 from modelling.model_functions import load_model
-
+from utils import auth_ee
 
 # ... rest of your code ...
 
+#json_file_name = 'authentication_keys/semiotic_garden_key.json'
+#conn = st.experimental_connection('gcs', type=FilesConnection)
+#json_cred = conn.read(json_file_name, input_format="json", ttl=600)
+
+#print(type(st.secrets)) MAYBE SHOW THIS TO NURIA!!!
+#print(json.dumps(st.secrets))
+
+# Write JSON file
+#json_cred = json.dumps(st.secrets)
+#print(json_cred)
 
 # Set the title of your Streamlit app
 st.title("Forest Detection App")
@@ -86,9 +101,9 @@ with c2:
 
         st.write("Coordinates of the rectangle")
 
-        st.write(f"Top Left: {A1}")
-        st.write(f"Top Right: {A2}")
-        st.write(f"Bottom Left: {B1}")
+        st.write(f"Bottom Left: {A1}")
+        st.write(f"Top Left: {A2}")
+        st.write(f"Top Right: {B1}")
         st.write(f"Bottom Right: {B2}")
 
 
@@ -100,26 +115,32 @@ selected_date = st.date_input("Select a date for satellite image analysis")
 # Add a button to initiate analysis
 if st.button("Analyze"):
     # Initialise the Earth Engine module.
-    ee.Initialize()
+    auth_ee(st.secrets['client_email'], st.secrets['private_key'])
     # Forest detection logic
     # Ensure coordinates are in the format expected by ee
+    #e.g. ee.Geometry.Rectangle(minLng, minLat, maxLng, maxLat)/(xMin, yMin, xMax, yMax)
     coordinates = [A1[0], A1[1], B1[0], B1[1]]
     feature_bands = ["B4", "B8"]
     #year = '2017'
 
-    NDVI = get_data(coordinates, selected_date.year, feature_bands)
+    NDVI = get_all_data(coordinates, selected_date.year, feature_bands)
+
+# assuming all arrays in NDVI_all have the same shape
+    NDVI_array = np.stack(NDVI, axis=0)  # adjust axis as necessary
+    print(NDVI_array.shape)
+
     #print(NDVI.shape)
-    NDVI_expanded = np.expand_dims(NDVI, axis=0)
-    NDVI_expanded = np.expand_dims(NDVI_expanded, axis=-1)
+    #NDVI_expanded = np.expand_dims(NDVI, axis=0)
+    #NDVI_expanded = np.expand_dims(NDVI_expanded, axis=-1)
     st.write(f"Analyzing satellite image for {selected_date.year}...")
 
     model = load_model(model_path)
-    print(NDVI_expanded.dtype)
-    print(NDVI_expanded.shape)
-    print(NDVI_expanded)
+    #print(NDVI_expanded.dtype)
+    #print(NDVI_expanded.shape)
+    #print(NDVI_expanded)
     print(model.summary())
 
-    y_pred = model.predict(NDVI_expanded)
+    y_pred = model.predict(NDVI_array)
     #print(y_pred)
     #print(y_pred.shape)
 
@@ -127,12 +148,47 @@ if st.button("Analyze"):
     print(y_pred.shape)
     print(y_pred)
 
+N = NDVI_array.shape[0]
+side = int(N**0.5)  # Assuming N is a perfect square for simplicity
+
+# Reshape the arrays to have shape (side, side, 50, 50) and (side, side, 1, 1)
+reshaped_NDVI = NDVI_array.reshape((side, side, 50, 50))
+reshaped_y_pred = y_pred.reshape((side, side, 1, 1))
+
+# Now concatenate along the last two dimensions to create a single large array
+stitched_NDVI = np.concatenate(np.concatenate(reshaped_NDVI, axis=2), axis=1)
+stitched_y_pred = np.concatenate(np.concatenate(reshaped_y_pred, axis=2), axis=1)
+
 # First Plot
-fig1, ax1 = plt.subplots()
-cax1 = ax1.imshow(NDVI[:, :], cmap='RdYlGn', vmin=-1, vmax=1)
-plt.colorbar(cax1)
-st.write('First Plot')
-st.pyplot(fig1)
+fig, ax = plt.subplots(figsize=(10, 10))
+im = ax.imshow(stitched_NDVI, cmap='RdYlGn', vmin=-1, vmax=1)
+ax.set_title('All NDVI Arrays Stitched Together')
+fig.colorbar(im, ax=ax, orientation='horizontal', fraction=.1)
+st.write('All Plots')
+st.pyplot(fig)
+
+# Update the color generation code:
+colors = stitched_y_pred.astype(np.float64)
+
+# Second Plot
+fig2, ax2 = plt.subplots(figsize=(2, 2))  # Adjust the figsize to your liking
+cmap = plt.cm.colors.ListedColormap(['white', 'green'])
+ax2.imshow(colors.reshape(stitched_y_pred.shape[:2]), cmap=cmap)
+ax2.set_aspect('equal', 'box')
+ax2.set_axis_off()
+st.write('Second Plot')
+st.pyplot(fig2)
+
+'''# First Plot
+# Plot all four 50x50 arrays in a 2x2 grid
+fig, axs = plt.subplots(2, 2, figsize=(10, 10))
+for i, ax in enumerate(axs.flat):
+    im = ax.imshow(NDVI_array[i, :, :], cmap='RdYlGn', vmin=-1, vmax=1)
+    ax.set_title(f'Array {i}')
+
+fig.colorbar(im, ax=axs, orientation='horizontal', fraction=.1)
+st.write('All Plots')
+st.pyplot(fig)
 # Second Plot
 
 fig2, ax2 = plt.subplots()
@@ -141,47 +197,8 @@ ax2.add_patch(plt.Rectangle((0, 0), 1, 1, fc=color))
 ax2.set_aspect('equal', 'box')
 ax2.set_axis_off()
 st.write('Second Plot')
-st.pyplot(fig2)
+st.pyplot(fig2)'''
 
-'''is_forest = y_pred[0, 0, 0, 0] > 0.5  # Assuming a threshold of 0.5 for binary classification
-    image_size = (100, 100)  # Replace with the desired image size
-    color = [0, 255, 0] if is_forest else [255, 255, 255]
-    forest_rgb = np.array(color).reshape(1, 1, 1, 3).repeat(image_size[0], axis=1).repeat(image_size[1], axis=2)
-    forest_image = Image.fromarray(np.uint8(forest_rgb[0]))
-
-    # Save the image to a temporary file
-    forest_image.save("forest_overlay.png")
-
-    # Use folium's built-in image_to_url utility function to convert the image file to a data URL
-
-    image_url = image_to_url("forest_overlay.png")
-    print(image_url)'''
-
-        #'''# Assuming y_pred has values of 0 and 1 where 1 indicates forest
-    #forest_rgb = np.where(y_pred == 1, [0, 255, 0], [255, 255, 255])  # RGB values for green and white
-
-    # Reshape the array to have 3 channels
-    #forest_rgb = forest_rgb.reshape(*y_pred.shape, 3)
-
-    # Create an image using Pillow
-    #forest_image = Image.fromarray(np.uint8(forest_rgb))
-
-    # Save the image
-    #forest_image.save("forest_overlay.png")
-
-'''overlay = folium.raster_layers.ImageOverlay(
-        image=image_url,
-        bounds=[[coordinates[0], coordinates[1]], [coordinates[2], coordinates[3]]],
-        opacity=1.0,
-        interactive=True,
-        cross_origin=True,
-        zindex=1,)
-
-
-    overlay.add_to(original_map)
-    with c2:
-        # Redraw the map with the overlay
-        st_folium(original_map)'''
 
 print('Got to end of code :)')
-    # You can add code here to analyze the selected area for the presence of a forest.'''
+    # You can add code here to analyze the selected area for the presence of a forest.

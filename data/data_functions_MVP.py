@@ -36,7 +36,6 @@ def get_target_image(year) -> ee.Image:
     return (
         ee.ImageCollection(params.TARGET)
         .filterDate(year)
-        #.filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 20))
         .sort('system:time_start')  # Sort by time to get earliest image
         .first()
         .select("LC_Type1")
@@ -52,15 +51,14 @@ def get_input_image(year: int, feature_bands, square, type):
             ee.ImageCollection(params.FEATURES)  # Sentinel-2 images
             .filterDate(f"{int(year)}-1-1", f"{int(year)+3}-12-31")  # filter by year
             .filterBounds(square)
-            .filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 20))
-            #.filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 20))  # filter cloudy images
+            .filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 20))  # filter cloudy images
             #.map(mask_sentinel2_clouds)  # mask/hide cloudy pixels
             .select(feature_bands)  # select all bands starting with B
-            .median()  # median of all non-cloudy pixels
+            #.median()  # median of all non-cloudy pixels
             #.unmask(default_value)  # default value for masked pixels
             #.float()  # convert to float32
-            #.sort('system:time_start')
-            #.first()
+            .sort('system:time_start')
+            .first()
         )
     elif type =="collection":
 
@@ -68,7 +66,7 @@ def get_input_image(year: int, feature_bands, square, type):
             ee.ImageCollection(params.FEATURES)  # Sentinel-2 images
             .filterDate(f"{int(year)}-1-1", f"{int(year)+3}-12-31")  # filter by year
             .filterBounds(square)
-            .filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 20))  # filter cloudy images
+            #.filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 20))  # filter cloudy images
             #.map(mask_sentinel2_clouds)  # mask/hide cloudy pixels
             .select(feature_bands)  # select all bands starting with B
             #.median()  # median of all non-cloudy pixels
@@ -121,7 +119,7 @@ def get_coordinates_felix(polygon, target):
     numb = 1
 
     # Iterating through the global image to generate stratified sampling coordinates
-    for point in sample_points(region, target, points_per_class=500, scale=500):
+    for point in sample_points(region, target, points_per_class=90, scale=500):
         target_dict[f"P{numb}"] = point
         numb +=1
 
@@ -172,10 +170,10 @@ def get_data(polygon, year, feature_bands):
             continue
 
         # Get the first image
-        image_features = get_input_image(year,feature_bands, square, "image")
+        #image_features = get_input_image(year,feature_bands, square, "image")
 
         # Clip the gotten image to the 500m x 500m square
-        #c_img_features = image_features.clip(square)
+        image_features = get_input_image(year,feature_bands, square, "image")
 
 
         # Get the image as a numpy array

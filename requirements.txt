@@ -13,3 +13,6 @@ earthengine-api
 tensorflow
 streamlit
 streamlit_folium
+gcsfs
+pyproj
+git+https://github.com/streamlit/files-connection
