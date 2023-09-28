@@ -1,13 +1,28 @@
 # Required imports
-import params
-from params import MODEL_TARGET, POLYGON, DATA_DATE, FEATURE_BANDS
+#import params
+import os
+import sys
+
 import ee
 import numpy as np
-from modelling.model_functions import baseline, evaluate_model, majority_pool, process_and_expand, train_cnn
-from data.data_functions_fg import get_data, get_target_image, get_coordinates_felix
+from model_functions import baseline, evaluate_model, majority_pool, process_and_expand, train_cnn
+
 
 """ Provides the setpoint values according to which the data will be collected. """
+# Get the directory containing the current script
+current_dir = os.path.dirname(os.path.abspath(__file__))
 
+# Construct the path to the parent directory
+parent_dir = os.path.join(current_dir, '..')
+
+# Convert the relative path to an absolute path
+parent_dir = os.path.abspath(parent_dir)
+
+# Append the parent directory to the Python path
+sys.path.append(parent_dir)
+
+import params as params
+from data.data_functions_MVP import get_data
 # Initialise the Earth Engine module.
 ee.Initialize()
 
@@ -31,7 +46,7 @@ polygon = [[[-145.7, 63.2], [-118.1, 22.3], [-78.2, 5.6], [-52.9, 47.6]]]
 feature_bands = ["B4", "B8"]
 
 # Getting data to evaluate the model
-train_f, train_t, test_f, test_t = get_data(POLYGON, DATA_DATE, FEATURE_BANDS) #get_target_image(target))
+train_f, train_t, test_f, test_t = get_data(params.POLYGON, params.DATA_DATE, params.FEATURE_BANDS) #get_target_image(target))
 
 processed_train_f = process_and_expand(train_f)
 processed_train_t = process_and_expand(train_t)
@@ -51,8 +66,10 @@ print("Test Loss:", loss)
 print("Test F1 Score:", f1_score)
 
 # Test print shape of returned data
-#print(test_f.shape)
-#print(test_t.shape)
+print(test_f.shape)
+print(test_t.shape)
+
+
 
 # Test majority pool function
 #result = majority_pool(test_f)
