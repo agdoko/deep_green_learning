@@ -253,6 +253,9 @@ if st.button("Analyze"):
         fig.colorbar(im, ax=ax, orientation='horizontal', fraction=.1)
         st.pyplot(fig)
 
+        # Just like we truncate the features for visualisation, we need to do the same with the predictions
+        y_pred = y_pred[:closest_square, :, :, :]
+        y_pred_prior = y_pred[:closest_square, :, :, :]
 
         # Assuming y_pred and y_pred_prior have shape (num_patches,)
         # Create 50x50 blocks for each predicted value
