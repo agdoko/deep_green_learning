@@ -57,7 +57,7 @@ for blob in blobs_f:
         clean_data = np.nan_to_num(image_data, nan=0)
         reshaped_array = np.reshape(clean_data, (50,50))
         image_array = reshaped_array[ :, :, np.newaxis]
-        #print(image_array.shape)
+        #print(image_data)
 
         # Save the image_data as a numpy file
         with open('feature.npy', 'wb') as ndarray_file:

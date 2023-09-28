@@ -56,11 +56,12 @@ def get_input_image(year: int, feature_bands, square, type):
             #.filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 20))  # filter cloudy images
             #.map(mask_sentinel2_clouds)  # mask/hide cloudy pixels
             .select(feature_bands)  # select all bands starting with B
-            .median()  # median of all non-cloudy pixels
-            #.unmask(default_value)  # default value for masked pixels
+            .first()
+            #.median()  # median of all non-cloudy pixels
+            .unmask(0)  # default value for masked pixels
             #.float()  # convert to float32
             #.sort('system:time_start')
-            #.first()
+
         )
     elif type =="collection":
 
@@ -72,7 +73,7 @@ def get_input_image(year: int, feature_bands, square, type):
             #.map(mask_sentinel2_clouds)  # mask/hide cloudy pixels
             .select(feature_bands)  # select all bands starting with B
             #.median()  # median of all non-cloudy pixels
-            #.unmask(default_value)  # default value for masked pixels
+            #.unmask(0)  # default value for masked pixels
             #.float()  # convert to float32
             .sort('system:time_start')
         )
@@ -121,7 +122,7 @@ def get_coordinates_felix(polygon, target):
     numb = 1
 
     # Iterating through the global image to generate stratified sampling coordinates
-    for point in sample_points(region, target, points_per_class=500, scale=500):
+    for point in sample_points(region, target, points_per_class=300, scale=500):
         target_dict[f"P{numb}"] = point
         numb +=1
 

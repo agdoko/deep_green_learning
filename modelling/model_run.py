@@ -43,8 +43,8 @@ print("Test Loss:", loss)
 print("Test F1 Score:", f1_score)
 
 # Test print shape of returned data
-print(test_f.shape)
-print(test_t.shape)
+#print(test_f.shape)
+#print(test_t.shape)
 
 
 
