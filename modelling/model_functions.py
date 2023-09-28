@@ -59,7 +59,7 @@ def majority_pool(array):
 # Define the baseline model
 def baseline(test_feature):
     """ Baseline model that uses majority pooling on a threshold NDVI value. """
-    mask_ndvi = test_feature >= 0.6
+    mask_ndvi = test_feature >= 0.4
     NDVI_bucketed = np.where(mask_ndvi, 1, 0)
     y_pred_baseline = majority_pool(NDVI_bucketed)
     return y_pred_baseline
