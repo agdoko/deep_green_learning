@@ -190,12 +190,13 @@ if st.button("Analyze"):
 
         # reshape current year
         reshaped_NDVI = NDVI_array.reshape((side_length, side_length, 50, 50), order='F')
+        reshaped_NDVI = np.flip(reshaped_NDVI, axis=0)
         print(reshaped_NDVI.shape)
 
         # Stitch the images
         stitched_NDVI_rows = [np.concatenate(reshaped_NDVI[i, :, :, :], axis=1) for i in range(side_length)]
         print(stitched_NDVI_rows[0].shape)
-        print(stitched_NDVI_rows.shape)
+        #print(stitched_NDVI_rows.shape)
         stitched_NDVI = np.concatenate(stitched_NDVI_rows, axis=0)
         print(stitched_NDVI.shape)
 
@@ -222,8 +223,8 @@ if st.button("Analyze"):
 
         # Reshape and stitch the prediction blocks
         def reshape_and_stitch(y_blocks):
-            reshaped = y_blocks.reshape((side_length, side_length, 50, 50))
-            #reshaped = np.flip(reshaped, axis=0)
+            reshaped = y_blocks.reshape((side_length, side_length, 50, 50), order='F')
+            reshaped = np.flip(reshaped, axis=0)
             #reshaped[[0, -1], :] = reshaped[[-1, 0], :]
             stitched_rows = [np.concatenate(reshaped[i, :, :, :], axis=1) for i in range(side_length)]
             return np.concatenate(stitched_rows, axis=0)
