@@ -38,19 +38,6 @@ from utils import auth_ee
 # Initialize coordinates variable at the top-level
 map_coordinates = None
 
-# ... rest of your code ...
-
-#json_file_name = 'authentication_keys/semiotic_garden_key.json'
-#conn = st.experimental_connection('gcs', type=FilesConnection)
-#json_cred = conn.read(json_file_name, input_format="json", ttl=600)
-
-#print(type(st.secrets)) MAYBE SHOW THIS TO NURIA!!!
-#print(json.dumps(st.secrets))
-
-# Write JSON file
-#json_cred = json.dumps(st.secrets)
-#print(json_cred)
-
 # Set the title of your Streamlit app
 st.title("Forest Detection App")
 
@@ -60,8 +47,6 @@ st.write(
     "and detect whether there is a forest present or not. You can also provide a date for "
     "the satellite image you'd like to analyze."
 )
-
-#@st.cache_data(persist=True)
 
 def create_map(center):
     m = folium.Map(
@@ -114,11 +99,8 @@ with c2:
     else:
         st.write("Please draw a rectangle on the map.")
 
-
 # Add a date input for satellite image analysis
 selected_date = st.date_input("Select a date for satellite image analysis")
-
-
 
 # Add a button to initiate analysis
 if st.button("Analyze"):
@@ -130,14 +112,12 @@ if st.button("Analyze"):
         #e.g. ee.Geometry.Rectangle(minLng, minLat, maxLng, maxLat)/(xMin, yMin, xMax, yMax)
         ee_coordinates = [A1[0], A1[1], B1[0], B1[1]]
         feature_bands = ["B4", "B8"]
-        #year = '2017'
 
         # selected year from user
         NDVI = get_all_data(ee_coordinates, selected_date.year, feature_bands)
 
         # year prior to selected year
         NDVI_prior = get_all_data(ee_coordinates, str(int(selected_date.year) - 1), feature_bands)
-
 
         # assuming all arrays in NDVI_all have the same shape
         NDVI_array = np.stack(NDVI, axis=0)  # adjust axis as necessary
@@ -206,32 +186,19 @@ if st.button("Analyze"):
 
         closest_square = side_length ** 2
 
-
         NDVI_array = NDVI_array[:closest_square, :, :]
 
         # reshape current year
-        reshaped_NDVI = NDVI_array.reshape((side_length, side_length, 50, 50))
-
-        #TODO IF THERE IS TIME - FIX THIS TILING AND REORIENTATION OF FEATURES, THEN IMPLEMENT FOR PREDICITONS
-        # Reorder the array for stitching
+        reshaped_NDVI = NDVI_array.reshape((side_length, side_length, 50, 50), order='F')
         reshaped_NDVI = np.flip(reshaped_NDVI, axis=0)
-
-        # Diagonal swap for a 4-grid arrangement (and larger grids)
-        reshaped_NDVI[[0, -1], :] = reshaped_NDVI[[-1, 0], :]
+        print(reshaped_NDVI.shape)
 
         # Stitch the images
         stitched_NDVI_rows = [np.concatenate(reshaped_NDVI[i, :, :, :], axis=1) for i in range(side_length)]
+        print(stitched_NDVI_rows[0].shape)
+        #print(stitched_NDVI_rows.shape)
         stitched_NDVI = np.concatenate(stitched_NDVI_rows, axis=0)
-        #TODO IF THERE IS TIME - FIX THIS TILING AND REORIENTATION OF FEATURES, THEN IMPLEMENT FOR PREDICITONS
-
-        # # CHECKPOINT WORKING TILING AND REORIENTATION OF FEATURES
-        # reshaped_NDVI = NDVI_array.reshape((side_length, side_length, 50, 50))
-
-
-        # # Stitch the images
-        # stitched_NDVI_rows = [np.concatenate(reshaped_NDVI[i, :, :], axis=1) for i in range(side_length)]
-        # stitched_NDVI = np.concatenate(stitched_NDVI_rows, axis=0)
-        # # CHECKPOINT WORKING TILING AND REORIENTATION OF FEATURES
+        print(stitched_NDVI.shape)
 
         # Visualization of features
         fig, ax = plt.subplots(figsize=(10, 10))
@@ -256,9 +223,9 @@ if st.button("Analyze"):
 
         # Reshape and stitch the prediction blocks
         def reshape_and_stitch(y_blocks):
-            reshaped = y_blocks.reshape((side_length, side_length, 50, 50))
+            reshaped = y_blocks.reshape((side_length, side_length, 50, 50), order='F')
             reshaped = np.flip(reshaped, axis=0)
-            reshaped[[0, -1], :] = reshaped[[-1, 0], :]
+            #reshaped[[0, -1], :] = reshaped[[-1, 0], :]
             stitched_rows = [np.concatenate(reshaped[i, :, :, :], axis=1) for i in range(side_length)]
             return np.concatenate(stitched_rows, axis=0)
 
@@ -298,7 +265,6 @@ if st.button("Analyze"):
         ax.set_aspect('equal', 'box')
         fig.colorbar(im, ax=ax, orientation='horizontal', fraction=.1)
         st.pyplot(fig)
-
 
     else:
         st.write("Please draw a rectangle on the map.")
